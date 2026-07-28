@@ -7,7 +7,7 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/10der/new-awtrix3-hass-integration/blob/main/README.md",
+  "documentation": "https://github.com/10der/.-awtrix3-ng-hass-integration/blob/main/README.md",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
