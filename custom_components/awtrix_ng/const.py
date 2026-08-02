@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-DOMAIN = "awtrix3_ng"
+DOMAIN = "awtrix_ng"
 
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
@@ -108,7 +108,7 @@ SERVICE_RTTTL_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }
@@ -130,7 +130,7 @@ SERVICE_SOUND_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }
@@ -158,7 +158,7 @@ SERVICE_PUSH_APP_DATA_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }
@@ -180,7 +180,7 @@ SERVICE_SWITCH_APP_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }
@@ -200,7 +200,7 @@ SERVICE_SETTINGS_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }
@@ -214,7 +214,7 @@ SERVICE_GET_SETTINGS_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }
@@ -228,7 +228,7 @@ SERVICE_GET_DEVICE_FIELDS = {
         "example": "deadbeaf",
         "selector": {
             "device": {
-                "integration": "awtrix3_ng",
+                "integration": "awtrix_ng",
                 "multiple" : True,
             }
         }

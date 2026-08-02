@@ -1,7 +1,7 @@
 alias: AWTRIX - OUTDOORS TEMPERATURE
 description: ""
 use_blueprint:
-  path: 10der/awtrix3-simple.yaml
+  path: 10der/awtrix-ng-simple.yaml
   input:
     entity: weather.forecast_home
     awtrix_device:

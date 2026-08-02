@@ -1,13 +1,13 @@
 {
-  "domain": "awtrix3_ng",
-  "name": "Awtrix 3 NG",
+  "domain": "awtrix_ng",
+  "name": "Awtrix NG",
   "version": "0.1.1",
   "codeowners": [
     "@10der"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/10der/awtrix3-ng-hass-integration/blob/main/README.md",
+  "documentation": "https://github.com/10der/awtrix-ng-hass-integration/blob/main/README.md",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",

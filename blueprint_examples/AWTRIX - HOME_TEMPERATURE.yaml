@@ -1,7 +1,7 @@
 alias: AWTRIX - HOME_TEMPERATURE
 description: ""
 use_blueprint:
-  path: 10der/awtrix3-simple.yaml
+  path: 10der/awtrix-ng-simple.yaml
   input:
     app_name: awtrix_app_home
     entity: sensor.home_temperature

@@ -88,7 +88,7 @@ blueprint:
         device:
           # integration: mqtt
           manufacturer: Blueforcer
-          model: "AWTRIX 3 NG"
+          model: "AWTRIX NG"
           multiple: true
 
 trigger:
@@ -149,14 +149,14 @@ action:
 
        - if: !input additional_conditions
          then:
-           - service: awtrix3_ng.push_app_data
+           - service: awtrix_ng.push_app_data
              data:
                device_id: "{{awtrix_device_id}}"
                name: "{{app_name}}"
                data: "{{ dict(payload, **user_options) }}"
 
          else:
-           - service: awtrix3_ng.push_app_data
+           - service: awtrix_ng.push_app_data
              data:
                device_id: "{{awtrix_device_id}}"
                name: "{{app_name}}"

@@ -26,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MANUAL_INPUT = "Manually configure AWTRIX3 device"
+CONF_MANUAL_INPUT = "Manually configure AWTRIX NG device"
 
 
 class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
