@@ -1,0 +1,42 @@
+alias: AWTRIX - HOME_TEMPERATURE
+description: ""
+use_blueprint:
+  path: 10der/awtrix3-simple.yaml
+  input:
+    app_name: awtrix_app_home
+    entity: sensor.home_temperature
+    suffix_text: °
+    awtrix_device:
+      - 2faa32e4a139d6415f4a0dd7066f3704
+    app_icon: "96"
+    user_options:
+      textColor: "{{color}}"
+    additional_options:
+      value_template: "{{states(entity_id) | round(0, 'floor', 0) }}"
+      color: |-
+        {% set temp = value_template | float %}
+        {% set t_min, t_max = -15, 35 %}
+        {% set h_min, h_max = 240, 0 %}
+        {% set t_clamped = [ [t_min, temp] | max, t_max ] | min %}
+        {% set ratio = (t_clamped - t_min) / (t_max - t_min) %}
+        {% set hue = (h_min + ratio * (h_max - h_min)) | int %}
+        {% set h = hue / 360 %}
+        {% set s = 1.0 %}
+        {% set v = 1.0 %}
+        {% set i = (h * 6) | int %}
+        {% set f = h * 6 - i %}
+        {% set p = v * (1 - s) %}
+        {% set q = v * (1 - f * s) %}
+        {% set t = v * (1 - (1 - f) * s) %}
+        {% if i % 6 == 0 %} {% set r, g, b = v, t, p %}
+        {% elif i == 1 %} {% set r, g, b = q, v, p %}
+        {% elif i == 2 %} {% set r, g, b = p, v, t %}
+        {% elif i == 3 %} {% set r, g, b = p, q, v %}
+        {% elif i == 4 %} {% set r, g, b = t, p, v %}
+        {% else %} {% set r, g, b = v, p, q %}
+        {% endif %}
+        #{{ "%02x%02x%02x" | format((r*255)|int, (g*255)|int, (b*255)|int) }}
+    prefix_text: "{{ '+' if value_template > 0 }}"
+    extra_triggers:
+      - trigger: time_pattern
+        minutes: /15

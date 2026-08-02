@@ -1,15 +1,15 @@
-# homeassistant custom_components awtrix3
+# homeassistant custom_components awtrix3 ng
 
 [![Buy me a cofee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://www.buymeacoffee.com/10der)
 
-HASS Awtrix3
+HASS Awtrix3 NG
 
 # Installation
 ### Via HACS
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=10der&repository=awtrix3-ng-hass-integration&category=Integration)
 
-* Search for "AWTRIX 3 integration" on HACS tab in Home Assistant
+* Search for "AWTRIX 3 NG integration" on HACS tab in Home Assistant
 * Click on three dots and use the "Download" option
 * Follow the steps
 * Restart Home Assistant
