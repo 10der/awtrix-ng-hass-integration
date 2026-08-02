@@ -8,14 +8,14 @@ A Home Assistant custom integration for **AWTRIX NG**.
 
 Supports:
 
-🔔 Notifications
-📱 Pushed Apps
-⚙️ Device Settings
-🔄 App Switching
-🔊 Built-in Sounds
-🎵 RTTTL Melodies
-📡 Multi-device Service Calls
-🏠 Home Assistant Device Entities
+- 🔔 Notifications
+- 📱 Pushed Apps
+- ⚙️ Device Settings
+- 🔄 App Switching
+- 🔊 Built-in Sounds
+- 🎵 RTTTL Melodies
+- 📡 Multi-device Service Calls
+- 🏠 Home Assistant Device Entities
 
 > [!IMPORTANT]
 > This integration is for **AWTRIX NG**.
