@@ -12,7 +12,6 @@ from .common import (
     async_get_coordinator_devices,
     getIcon,
 )
-from .coordinator import AwtrixCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +27,7 @@ async def async_get_service(
 
     if discovery_info is None:
         return None
-
-    coordinator = discovery_info.get("coordinator")
-    if coordinator is None:
-        return None
-    return AwtrixNotificationService(hass=hass, coordinator=coordinator)
+    return AwtrixNotificationService(hass=hass)
 
 
 ########################################################################################################
@@ -42,26 +37,20 @@ PARALLEL_UPDATES = 1
 class AwtrixNotificationService(BaseNotificationService):
     """Implement the notification service for Awtrix."""
 
-    def __init__(self, hass: HomeAssistant, coordinator: AwtrixCoordinator) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Init the notification service for Awtrix."""
 
         self.hass = hass
-        self.coordinator = coordinator
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to some Awtrix device."""
 
-        apis = []
-        if self.coordinator is None:
-            target_ids = kwargs.get(ATTR_TARGET, 'all')
-            if target_ids == 'all':
-                coordinators = async_get_coordinator_devices(self.hass)
-                apis = [x.api for x in coordinators]
-            else:
-                coordinators = async_get_coordinator_by_device_name(self.hass, target_ids)
-                apis = [x.api for x in coordinators]
+        target_ids = kwargs.get(ATTR_TARGET, 'all')
+        if target_ids == 'all':
+            coordinators = async_get_coordinator_devices(self.hass)
         else:
-            apis.append(self.coordinator.api)
+            coordinators = async_get_coordinator_by_device_name(self.hass, target_ids)
+        apis = [x.api for x in coordinators]
 
         data = kwargs.get(ATTR_DATA)
         for api in apis:

@@ -61,7 +61,7 @@ def async_get_coordinator_by_device_name(
     device_registry = dr.async_get(hass)
     for device in device_registry.devices.values():
         if device.manufacturer == 'Blueforcer':
-            if device.name in device_names or device.name_by_user or device.name in device_names:
+            if device.name in device_names or device.name_by_user in device_names:
                 for entry_id in device.config_entries:
                     entry = hass.config_entries.async_get_entry(entry_id)
                     if entry is not None and entry.domain == DOMAIN:

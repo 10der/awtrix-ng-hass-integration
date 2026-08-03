@@ -1,5 +1,5 @@
 blueprint:
-  name: AWTRIX show entity
+  name: AWTRIX NG show entity
   description: Show entity
   domain: automation
   input:
@@ -64,8 +64,8 @@ blueprint:
       default: {}
 
     user_options:
-      name: AWTRIX application options
-      description: AWTRIX application useroptions.
+      name: AWTRIX NG application options
+      description: AWTRIX NG application useroptions.
       selector:
         object:
       default:
@@ -81,8 +81,8 @@ blueprint:
         condition:
 
     awtrix_device:
-      name: AWTRIX device
-      description: The AWTRIX device for show app.
+      name: AWTRIX NG device
+      description: The AWTRIX NG device for show app.
       default: []
       selector:
         device:

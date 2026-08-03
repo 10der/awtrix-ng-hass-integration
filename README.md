@@ -52,19 +52,24 @@ Restart Home Assistant and add **AWTRIX NG** from **Settings → Devices & servi
 
 ## Notifications
 
-The integration creates a notify action for each configured AWTRIX NG device.
+The integration exposes a single `notify.awtrix_ng` action. Use `data.target`
+with the device's name (as shown on its device page, or renamed by you in
+Home Assistant) to send to a specific AWTRIX NG device, or omit `target` to
+send to all configured devices.
 
 ```yaml
-action: notify.awtrix_bedroom
+action: notify.awtrix_ng
 data:
+  target: awtrix_bedroom
   message: Garage door has been open for 10 minutes.
 ```
 
 Notification with additional AWTRIX NG payload fields:
 
 ```yaml
-action: notify.awtrix_bedroom
+action: notify.awtrix_ng
 data:
+  target: awtrix_bedroom
   message: Garage door has been open for 10 minutes.
   data:
     icon: "33655"
@@ -74,8 +79,9 @@ data:
 ### Persistent notification
 
 ```yaml
-action: notify.awtrix_bedroom
+action: notify.awtrix_ng
 data:
+  target: awtrix_bedroom
   message: Hello!
   data:
     hold: true
@@ -84,8 +90,9 @@ data:
 Dismiss the active notification by sending an empty message:
 
 ```yaml
-action: notify.awtrix_bedroom
+action: notify.awtrix_ng
 data:
+  target: awtrix_bedroom
   message: ""
 ```
 

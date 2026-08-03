@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {
-                CONF_NAME:  "awtrix",
+                CONF_NAME:  DOMAIN,
             },
             config
         )
@@ -82,20 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     #     await register_webhook_v1(hass, config_entry)
     # except:
     #     _LOGGER.warning("Failed to register webhook v1, trying v2")
-
-    # notification (deprecated])
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {
-                CONF_NAME:  config_entry.unique_id,
-                "coordinator": coordinator,
-            },
-            {},
-        )
-    )
 
     # Return true to denote a successful setup.
     return True
