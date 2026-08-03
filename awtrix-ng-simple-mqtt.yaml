@@ -1,0 +1,175 @@
+blueprint:
+  name: AWTRIX NG show entity
+  description: Show entity
+  domain: automation
+  input:
+    app_name:
+      name: (Required) Application name
+      description: "Application name"
+      default: "awtrix_app"
+      selector:
+        text:
+          multiline: false
+          multiple: false
+
+    app_icon:
+      name: Application Icon
+      description: "Application icon"
+      default: ""
+      selector:
+        text:
+          multiline: false
+          multiple: false
+
+    entity:
+      name: Entity
+      description: Entity
+      selector:
+        entity:
+          multiple: false
+
+    prefix_text:
+      name: Text prefix
+      description: "Text prefix"
+      selector:
+        object:
+      default: ""
+
+    suffix_text:
+      name: Text suffix
+      description: "Text suffix"
+      selector:
+        object:
+      default: ""
+
+    extra_triggers:
+      name: Extra Triggers
+      description: Additional triggers to actions.
+      default:
+      selector:
+          trigger:
+
+    pre_actions:
+      name: Actions
+      description: Actions when starting...
+      selector:
+        action:
+      default:
+
+    additional_options:
+      name: Additional options
+      description: Extra options
+      selector:
+        object:
+      default: {}
+
+    user_options:
+      name: AWTRIX NG application options
+      description: AWTRIX NG application useroptions.
+      selector:
+        object:
+      default:
+        durationMs: 5000
+
+    additional_conditions:
+      name: Additional conditions
+      description: |
+        Extra conditions you may want to add to this automation 
+        (Example: Home occupied, TV on, etc)
+      default: []
+      selector:
+        condition:
+
+    awtrix_device:
+      name: AWTRIX NG device
+      description: MQTT device prefix without a trailing slash
+      default: []
+      selector:
+        text:
+          multiline: false
+          multiple: true
+
+trigger:
+  - platform: state
+    entity_id: !input entity  
+    id: update
+
+  - platform: homeassistant
+    event: start
+    id: update
+
+  - platform: event
+    event_type: automation_reloaded
+    id: update
+
+  - triggers: !input extra_triggers
+
+variables:
+  entity_id: !input entity
+  app_name: !input app_name
+  app_icon: !input app_icon
+  additional_conditions: !input additional_conditions
+
+condition: []
+
+action:
+  - choose: []
+    default: !input pre_actions
+
+  - &variable_entity
+    alias: Variable Entity
+    variables:
+      !input additional_options
+
+  - variables:
+      <<: *variable_entity
+      awtrix_devices: !input awtrix_device
+      # deprecated !
+      user_data: !input additional_options
+
+      value_template: "{{ user_data.get('value_template', states(entity_id)) }}"
+      icon_template: "{{ user_data.get('icon_template', app_icon) }}"
+      prefix_text: !input prefix_text
+      suffix_text: !input suffix_text
+      user_options: !input user_options
+      payload: >-
+        {{
+          dict(
+            {
+              "text": prefix_text ~ value_template ~ suffix_text
+            },
+            **(
+              {
+                "icon": icon_template | string
+              }
+              if icon_template is not none
+                 and icon_template | string | length > 0
+              else {}
+            )
+          )
+        }}
+
+
+  - repeat:
+      for_each: "{{ awtrix_devices }}"
+      sequence:
+        - variables:
+            mqtt_prefix: "{{ repeat.item | trim('/') }}"
+            mqtt_topic: "{{ mqtt_prefix }}/cmd/apps/pushed/{{ app_name }}"
+
+        - if: !input additional_conditions
+          then:
+            - action: mqtt.publish
+              data:
+                qos: 0
+                retain: false
+                topic: "{{ mqtt_topic }}"
+                payload: "{{ dict(payload, **user_options) | to_json }}"
+
+          else:
+            - action: mqtt.publish
+              data:
+                qos: 0
+                retain: false
+                topic: "{{ mqtt_topic }}"
+                payload: ""
