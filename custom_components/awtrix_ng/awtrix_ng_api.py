@@ -323,11 +323,27 @@ class AwtrixNgApi:
 
     async def async_push_app(self, name: str, payload: Mapping[str, Any] | Sequence[Mapping[str, Any]]) -> None:
         _validate_name(name, max_length=32)
-        body: Any = dict(payload) if isinstance(payload, Mapping) else [dict(item) for item in payload]
+
+        if isinstance(payload, Mapping):
+            body = dict(payload)
+            if body.get("icon") is not None:
+                body["icon"] = str(body["icon"])
+        else:
+            body = []
+            for item in payload:
+                item_body = dict(item)
+                if item_body.get("icon") is not None:
+                    item_body["icon"] = str(item_body["icon"])
+                body.append(item_body)
+
         if not body:
             raise ValueError("A pushed app payload must not be empty")
+
         await self._request(
-            "PUT", f"/api/v1/apps/pushed/{quote(name, safe='')}", json=body, response_type="none"
+            "PUT", 
+            f"/api/v1/apps/pushed/{quote(name, safe='')}",
+            json=body, 
+            response_type="none"
         )
 
     async def async_delete_app(self, name: str) -> JsonObject | None:
@@ -337,7 +353,18 @@ class AwtrixNgApi:
     # Notifications
 
     async def async_notify(self, payload: Mapping[str, Any]) -> None:
-        await self._request("POST", "/api/v1/notifications", json=dict(payload), response_type="none")
+
+        body = dict(payload)
+        if body.get("icon") is not None:
+            body["icon"] = str(body["icon"])
+
+        await self._request(
+            "POST",
+            "/api/v1/notifications",
+            json=body,
+            response_type="none",
+        )
+
 
     async def async_dismiss_notification(self) -> None:
         await self._request("DELETE", "/api/v1/notifications/active", response_type="none")
