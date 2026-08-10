@@ -80,6 +80,13 @@ class AwtrixNgNotFoundError(AwtrixNgHttpError):
 class AwtrixNgValidationError(AwtrixNgHttpError):
     """The request was rejected as invalid (HTTP 400/413/415/422)."""
 
+def _normalize_icon(payload: Mapping[str, Any]) -> dict[str, Any]:
+    body = dict(payload)
+
+    if body.get("icon") is not None:
+        body["icon"] = str(body["icon"])
+
+    return body
 
 class AwtrixNgApi:
     """Async AWTRIX NG API client."""
@@ -324,17 +331,11 @@ class AwtrixNgApi:
     async def async_push_app(self, name: str, payload: Mapping[str, Any] | Sequence[Mapping[str, Any]]) -> None:
         _validate_name(name, max_length=32)
 
-        if isinstance(payload, Mapping):
-            body = dict(payload)
-            if body.get("icon") is not None:
-                body["icon"] = str(body["icon"])
-        else:
-            body = []
-            for item in payload:
-                item_body = dict(item)
-                if item_body.get("icon") is not None:
-                    item_body["icon"] = str(item_body["icon"])
-                body.append(item_body)
+        body: Any = (
+            _normalize_icon(payload)
+            if isinstance(payload, Mapping)
+            else [_normalize_icon(item) for item in payload]
+        )
 
         if not body:
             raise ValueError("A pushed app payload must not be empty")
@@ -354,17 +355,12 @@ class AwtrixNgApi:
 
     async def async_notify(self, payload: Mapping[str, Any]) -> None:
 
-        body = dict(payload)
-        if body.get("icon") is not None:
-            body["icon"] = str(body["icon"])
-
         await self._request(
             "POST",
             "/api/v1/notifications",
-            json=body,
+            json=_normalize_icon(payload),
             response_type="none",
         )
-
 
     async def async_dismiss_notification(self) -> None:
         await self._request("DELETE", "/api/v1/notifications/active", response_type="none")
