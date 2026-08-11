@@ -148,6 +148,19 @@ action:
             )
           )
         }}
+      final_payload: >-
+        {{
+          dict(
+            dict(payload, **user_options),
+            **(
+              {
+                "icon": dict(payload, **user_options).icon | string
+              }
+              if 'icon' in dict(payload, **user_options)
+              else {}
+            )
+          )
+        }}
 
 
   - repeat:
@@ -164,7 +177,7 @@ action:
                 qos: 0
                 retain: false
                 topic: "{{ mqtt_topic }}"
-                payload: "{{ dict(payload, **user_options) | to_json }}"
+                payload: "{{ final_payload | to_json }}"
 
           else:
             - action: mqtt.publish
