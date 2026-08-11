@@ -20,11 +20,9 @@ Supports:
 > [!IMPORTANT]
 > This integration is for **AWTRIX NG**.
 >
-> When migrating automations from AWTRIX 3, both the Home Assistant service
-> convention and the AWTRIX payload keys must be updated.
+> When migrating automations from AWTRIX 3, both the Home Assistant service convention and the AWTRIX payload keys must be updated.
 >
-> See the official migration guide:
-> https://ang.blueforcer.de/guides/migrating-from-awtrix3/
+> See the official migration guide: https://ang.blueforcer.de/guides/migrating-from-awtrix3/
 
 ## Installation
 
@@ -52,10 +50,7 @@ Restart Home Assistant and add **AWTRIX NG** from **Settings → Devices & servi
 
 ## Notifications
 
-The integration exposes a single `notify.awtrix_ng` action. Use `data.target`
-with the device's name (as shown on its device page, or renamed by you in
-Home Assistant) to send to a specific AWTRIX NG device, or omit `target` to
-send to all configured devices.
+The integration exposes a single `notify.awtrix_ng` action. Use `data.target` with the device's name (as shown on its device page, or renamed by you in Home Assistant) to send to a specific AWTRIX NG device, or omit `target` to send to all configured devices.
 
 ```yaml
 action: notify.awtrix_ng
@@ -98,8 +93,7 @@ data:
 
 ## Pushed apps
 
-AWTRIX NG uses camelCase payload keys. Durations and lifetimes are specified in
-milliseconds.
+AWTRIX NG uses camelCase payload keys. Durations and lifetimes are specified in milliseconds.
 
 ```yaml
 action: awtrix_ng.push_app_data
@@ -122,8 +116,7 @@ data:
 
 ### Remove a pushed app
 
-For compatibility, this integration treats an empty app body as a request to
-remove the pushed app:
+For compatibility, this integration treats an empty app body as a request to remove the pushed app:
 
 ```yaml
 action: awtrix_ng.push_app_data
@@ -156,8 +149,7 @@ data:
 
 ## Device settings
 
-The `awtrix_ng.settings` action accepts AWTRIX NG setting names directly.
-Settings use camelCase.
+The `awtrix_ng.settings` action accepts AWTRIX NG setting names directly. Settings use camelCase.
 
 Common settings include:
 
