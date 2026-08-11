@@ -280,14 +280,11 @@ Some common payload conversions:
 | `line` | `lineChart` |
 | `rtttl` in notification data | `soundRtttl` |
 
-AWTRIX NG validates payloads strictly. Unknown or obsolete keys cause the whole
-request to be rejected instead of being silently ignored.
+AWTRIX NG validates payloads strictly. Unknown or obsolete keys cause the whole request to be rejected instead of being silently ignored.
 
 ## Notes
 
-- Pushed app names must contain only letters, numbers, `_` or `-` and must be
-  between 1 and 32 characters long.
+- Pushed app names must contain only letters, numbers, `_` or `-` and must be between 1 and 32 characters long.
 - AWTRIX NG app payloads use camelCase.
 - Time values ending in `Ms` are expressed in milliseconds.
-- The integration can target multiple configured devices in one action by
-  placing multiple values in `device_id`.
+- The integration can target multiple configured devices in one action by placing multiple values in `device_id`.
