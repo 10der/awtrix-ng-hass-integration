@@ -54,6 +54,9 @@ class AwtrixService:
         payload = action_data.copy()
         payload.pop(CONF_DEVICE_ID, None)
 
+        if not payload:
+            return await self.call(lambda x: x.async_delete_app(app_id), self.api(data))
+
         if 'icon' in payload:
             if str(payload["icon"]).startswith(('http://', 'https://')):
                 payload["icon"] = await self.hass.async_add_executor_job(getIcon, str(payload["icon"]))
