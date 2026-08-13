@@ -229,6 +229,23 @@ data:
   rtttl: "two_short:d=4,o=5,b=100:16e6,16e6"
 ```
 
+## Buttons
+
+The integration creates three binary sensors for the device's physical buttons: `..._button_left`, `..._button_select`, `..._button_right`. They turn `on` while the button is held and `off` on release.
+
+These sensors are driven entirely by the AWTRIX button webhook - the device's REST API does not expose momentary button state, so polling alone cannot see a press. To enable them, set the `buttonCallback` field on the AWTRIX device (Settings → System) to:
+
+```text
+http://<home-assistant-ip>:8123/api/webhook/Awtrix-WebHook
+```
+
+No Home Assistant restart is needed; the webhook is registered as soon as the integration is loaded.
+
+> [!NOTE]
+> AWTRIX sends this webhook over plain HTTP only (no HTTPS) and requires Home Assistant to be reachable on the same local network. If `buttonCallback` is left empty, the button sensors stay `off`.
+>
+> Reference: https://ang.blueforcer.de/reference/system/?h=webhook#buttons
+
 ## Automation example
 
 Show the bathroom temperature every five minutes:

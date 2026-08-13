@@ -57,23 +57,20 @@ class AwtrixBinarySensor(AwtrixEntity, BinarySensorEntity):
         self.hass = hass
         self.key = key
         self._attr_name = name or key
-        self._state = False
-        self._available = True
+        self._attr_is_on = False
         self._attr_icon = icon
-        self._state = False
 
         super().__init__(coordinator, key)
         self.coordinator.on_press(self.key, self.button_click)
 
     def button_click(self, state):
         """Set actual state."""
-        self._state = state == "1"
+        self._attr_is_on = state == "1"
         self.async_write_ha_state()
 
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Update sensor with latest data from coordinator."""
+        """Refresh availability/device info; button state comes only from the webhook."""
 
-        self._attr_is_on = bool(self.coordinator.data.get(self.key))
         self.async_write_ha_state()
