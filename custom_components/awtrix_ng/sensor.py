@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -54,9 +54,11 @@ async def async_setup_entry(
                             icon="mdi:wan"),
             CommmonSensor(hass=hass, coordinator=coordinator, key="uptime", name="Uptime",
                             data_key="uptimeSeconds",
-                            device_class=SensorDeviceClass.TIMESTAMP,
+                            device_class=SensorDeviceClass.DURATION,
+                            state_class=SensorStateClass.MEASUREMENT,
+                            measurement=UnitOfTime.SECONDS,
                             entity_category=EntityCategory.DIAGNOSTIC,
-                            value_fn=lambda data: (utcnow() - timedelta(seconds=data)).replace(second=0, microsecond=0)),
+                            icon="mdi:clock-outline"),
             CommmonSensor(hass=hass, coordinator=coordinator, key="ram", name="Free ram",
                             data_key="freeHeapBytes",
                             measurement="B",
