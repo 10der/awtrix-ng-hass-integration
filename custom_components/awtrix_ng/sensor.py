@@ -56,13 +56,14 @@ async def async_setup_entry(
                             data_key="uptimeSeconds",
                             device_class=SensorDeviceClass.TIMESTAMP,
                             entity_category=EntityCategory.DIAGNOSTIC,
-                            value_fn=lambda data: utcnow() - timedelta(seconds=data)),
+                            value_fn=lambda data: (utcnow() - timedelta(seconds=data)).replace(second=0, microsecond=0)),
             CommmonSensor(hass=hass, coordinator=coordinator, key="ram", name="Free ram",
                             data_key="freeHeapBytes",
                             measurement="B",
                             entity_category=EntityCategory.DIAGNOSTIC,
                             state_class=SensorStateClass.MEASUREMENT,
-                            icon="mdi:memory")
+                            icon="mdi:memory"),
+            LastBootSensor(hass=hass, coordinator=coordinator),
         ]
     )
 
@@ -187,6 +188,47 @@ class LuxSensor(AwtrixEntity, SensorEntity):
         """Update sensor with latest data from coordinator."""
 
         self._attr_native_value = self.coordinator.data.get("lightLevel", 0)
+        self.async_write_ha_state()
+
+
+class LastBootSensor(AwtrixEntity, SensorEntity):
+    """Representation of an Awtrix last boot time sensor.
+
+    Only updates (and fires a state change) when the computed boot time
+    actually jumps, i.e. the device rebooted - unlike Uptime it stays
+    constant between reboots, so it can be used as a reboot trigger.
+    """
+
+    _attr_name = "Last boot"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:restart"
+
+    _REBOOT_THRESHOLD_SECONDS = 30
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        self.hass = hass
+        super().__init__(coordinator, "last_boot")
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor only when the device actually rebooted."""
+
+        uptime_seconds = self.coordinator.data.get("uptimeSeconds")
+        if uptime_seconds is None:
+            return
+
+        boot_time = utcnow() - timedelta(seconds=uptime_seconds)
+        previous = self._attr_native_value
+        if previous is not None and abs((boot_time - previous).total_seconds()) <= self._REBOOT_THRESHOLD_SECONDS:
+            return
+
+        self._attr_native_value = boot_time
         self.async_write_ha_state()
 
 
