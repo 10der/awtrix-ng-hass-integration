@@ -63,6 +63,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
     """Set up Awtrix Integration from a config entry."""
 
+    # Re-register services (a prior entry unload does not remove them, but
+    # HA restart / first entry setup needs them registered here too).
+    await async_setup_services(hass)
+
     coordinator = AwtrixCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()
 
@@ -102,9 +106,9 @@ async def async_remove_config_entry_device(
 async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
     """Unload a config entry."""
 
-    # Unload services
-    for service in hass.services.async_services_for_domain(DOMAIN):
-        hass.services.async_remove(DOMAIN, service)
+    # Services are shared across all config entries of this domain and are
+    # re-registered in async_setup_entry, so they are kept registered here
+    # to survive a reload of this entry.
 
     # Unload platforms and return result
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

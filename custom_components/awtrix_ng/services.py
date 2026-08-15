@@ -12,6 +12,9 @@ from .const import DOMAIN, SERVICE_TO_FIELDS, SERVICE_TO_SCHEMA, SERVICES
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Handle Integration Services."""
 
+    if hass.services.has_service(DOMAIN, SERVICES[0]):
+        return
+
     async def service_handler(awtrixService, service, call: ServiceCall) -> None:
         """Handle service call."""
 
