@@ -13,12 +13,14 @@ MIN_SCAN_INTERVAL = 1
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR,
                              Platform.BUTTON,
                              Platform.LIGHT,
+                             Platform.NOTIFY,
                              Platform.SENSOR,
                              Platform.SWITCH, ]
 
 COORDINATORS = "coordinators"
 
 # Services
+SERVICE_NOTIFY = "notify"
 SERVICE_PUSH_APP_DATA = "push_app_data"
 SERVICE_SETTINGS = "settings"
 SERVICE_GET_SETTINGS = "get_settings"
@@ -64,6 +66,12 @@ SERVICE_SWITCH_APP_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         vol.Required(SERVICE_APP_NAME): str,
     },
 )
+
+SERVICE_NOTIFY_SCHEMA = {
+    vol.Required("message"): str,
+    vol.Optional("data", default={}): dict,
+    vol.Optional("title"): str,
+}
 
 SERVICE_RTTTL_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
@@ -151,17 +159,6 @@ SERVICE_PUSH_APP_DATA_FIELDS = {
         "selector": {
             "object": ""
         }
-    },
-    "device_id": {
-        "description": "device or list of devices",
-        "required": True,
-        "example": "deadbeaf",
-        "selector": {
-            "device": {
-                "integration": "awtrix_ng",
-                "multiple" : True,
-            }
-        }
     }
 }
 
@@ -173,17 +170,6 @@ SERVICE_SWITCH_APP_FIELDS = {
         "selector": {
             "text": ""
         }
-    },
-    "device_id": {
-        "description": "device or list of devices",
-        "required": True,
-        "example": "deadbeaf",
-        "selector": {
-            "device": {
-                "integration": "awtrix_ng",
-                "multiple" : True,
-            }
-        }
     }
 }
 
@@ -193,45 +179,42 @@ SERVICE_SETTINGS_FIELDS = {
     },
     "autoTransition": {
         "example": 'true',
+    }
+}
+
+SERVICE_GET_SETTINGS_FIELDS = {}
+
+SERVICE_GET_DEVICE_FIELDS = {}
+
+SERVICE_NOTIFY_FIELDS = {
+    "message": {
+        "description": "The notification message",
+        "required": True,
+        "example": "Hello, AWTRIX NG!",
+        "selector": {
+            "text": {}
+        }
     },
-    "device_id": {
-        "description": "device or list of devices",
-        "required": True,
-        "example": "deadbeaf",
+    "title": {
+        "description": "Optional notification title",
+        "required": False,
+        "example": "Doorbell",
         "selector": {
-            "device": {
-                "integration": "awtrix_ng",
-                "multiple" : True,
-            }
+            "text": {}
+        }
+    },
+    "data": {
+        "description": "Additional AWTRIX payload values",
+        "required": False,
+        "selector": {
+            "object": {}
         }
     }
 }
 
-SERVICE_GET_SETTINGS_FIELDS = {
-    "device_id": {
-        "description": "device or list of devices",
-        "required": True,
-        "example": "deadbeaf",
-        "selector": {
-            "device": {
-                "integration": "awtrix_ng",
-                "multiple" : True,
-            }
-        }
-    }
-}
-
-SERVICE_GET_DEVICE_FIELDS = {
-    "device_id": {
-        "description": "device or list of devices",
-        "required": True,
-        "example": "deadbeaf",
-        "selector": {
-            "device": {
-                "integration": "awtrix_ng",
-                "multiple" : True,
-            }
-        }
+SERVICE_DEVICE_TARGET = {
+    "device": {
+        "integration": DOMAIN
     }
 }
 
@@ -254,4 +237,14 @@ SERVICE_TO_SCHEMA = {
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_SCHEMA,
     SERVICE_RTTTL: SERVICE_RTTTL_SCHEMA,
     SERVICE_SOUND: SERVICE_SOUND_SCHEMA
+}
+
+SERVICE_TO_TARGET = {
+    SERVICE_PUSH_APP_DATA: SERVICE_DEVICE_TARGET,
+    SERVICE_SETTINGS: SERVICE_DEVICE_TARGET,
+    SERVICE_GET_SETTINGS: SERVICE_DEVICE_TARGET,
+    SERVICE_GET_DEVICE: SERVICE_DEVICE_TARGET,
+    SERVICE_SWITCH_APP: SERVICE_DEVICE_TARGET,
+    SERVICE_RTTTL: SERVICE_DEVICE_TARGET,
+    SERVICE_SOUND: SERVICE_DEVICE_TARGET,
 }

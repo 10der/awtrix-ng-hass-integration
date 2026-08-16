@@ -63,6 +63,26 @@ class AwtrixService:
 
         return await self.call(lambda x: x.async_push_app(app_id, payload), self.api(data))
 
+    async def notify(self, data):
+        """Send a notification to one or more devices."""
+
+        message = data["message"]
+        payload = (data.get("data") or {}).copy()
+        payload.pop(CONF_DEVICE_ID, None)
+
+        if title := data.get("title"):
+            payload["title"] = title
+
+        if 'icon' in payload:
+            if str(payload["icon"]).startswith(('http://', 'https://')):
+                payload["icon"] = await self.hass.async_add_executor_job(getIcon, str(payload["icon"]))
+
+        if not message:
+            return await self.call(lambda x: x.async_dismiss_notification(), self.api(data))
+
+        payload["text"] = message
+        return await self.call(lambda x: x.async_notify(payload), self.api(data))
+
     async def switch_app(self, data):
         """Call API switch app."""
 
