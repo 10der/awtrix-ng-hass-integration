@@ -1,5 +1,12 @@
 # Home Assistant AWTRIX NG Integration
 
+![release](https://img.shields.io/github/v/release/10der/awtrix-ng-hass-integration)
+![issues](https://img.shields.io/github/issues/10der/awtrix-ng-hass-integration)
+![code size](https://img.shields.io/github/languages/code-size/10der/awtrix-ng-hass-integration)
+![last commit](https://img.shields.io/github/last-commit/10der/awtrix-ng-hass-integration)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Validate with hassfest and HACS](https://github.com/10der/awtrix-ng-hass-integration/actions/workflows/validate.yml/badge.svg)](https://github.com/10der/awtrix-ng-hass-integration/actions/workflows/validate.yml)
+
 [![Buy me a coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://www.buymeacoffee.com/10der)
 
 A Home Assistant custom integration for **AWTRIX NG**.
