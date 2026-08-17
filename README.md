@@ -246,6 +246,9 @@ No Home Assistant restart is needed; the webhook is registered as soon as the in
 >
 > Reference: https://ang.blueforcer.de/reference/system/?h=webhook#buttons
 
+> [!WARNING]
+> **Known security issue:** the webhook ID (`Awtrix-WebHook`) is a fixed string hard-coded in this integration's source, identical for every installation - it is not a per-install secret. Home Assistant webhooks are unauthenticated by design, so anyone who can reach `/api/webhook/Awtrix-WebHook` on your Home Assistant instance (anyone on your LAN, or on the internet if your instance is exposed via port-forwarding, a reverse proxy, or Nabu Casa remote access) can POST forged button-press events, without touching the physical device, and trigger any automation wired to a button press. A fix (a random, per-installation webhook ID) is planned but not yet implemented - track this before relying on button-press automations for anything security-sensitive.
+
 ## Automation example
 
 Show the bathroom temperature every five minutes:

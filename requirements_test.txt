@@ -1,0 +1,9 @@
+# Test dependencies for the awtrix_ng custom integration.
+#
+# pytest-homeassistant-custom-component mirrors Home Assistant core's own
+# test fixtures (hass, MockConfigEntry, enable_custom_integrations, ...) for
+# integrations that live outside the homeassistant/core repo. It is released
+# against specific HA core versions - if you bump the "homeassistant"
+# manifest requirement, bump this pin to match.
+pytest-homeassistant-custom-component
+pytest-asyncio

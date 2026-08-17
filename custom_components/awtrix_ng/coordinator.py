@@ -42,6 +42,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{HOMEASSISTANT_DOMAIN} ({config_entry.unique_id})",
             # Method to call on every update interval.
             update_method=self.async_update_data,

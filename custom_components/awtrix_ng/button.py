@@ -36,7 +36,7 @@ async def async_setup_entry(
             AwtrixButton(
                 hass=hass,
                 coordinator=coordinator,
-                key="dismiss_notificationn",
+                key="dismiss_notification",
                 name="Dismiss notification",
                 icon="mdi:swap-horizontal"),
         ]
@@ -71,5 +71,5 @@ class AwtrixButton(AwtrixEntity, ButtonEntity):
             await self.coordinator.api.async_next_app()
         if self.key == "previous_app":
             await self.coordinator.api.async_previous_app()
-        if self.key == "dismiss_notificationn":
+        if self.key == "dismiss_notification":
             await self.coordinator.api.async_dismiss_notification()

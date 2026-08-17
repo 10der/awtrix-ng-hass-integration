@@ -11,10 +11,9 @@ from aiohttp.web_exceptions import HTTPException
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -43,17 +42,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # services
     await async_setup_services(hass)
-
-    # notifications
-    await discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {
-                CONF_NAME:  DOMAIN,
-            },
-            config
-        )
 
     # webhook (buttons)
     await register_webhook_v2(hass)
@@ -168,6 +156,10 @@ async def register_webhook_v2(hass: HomeAssistant):
                 data = dict(await request.post())
         except (TimeoutError, HTTPException) as error:
             _LOGGER.error("Could not get information from POST <%s>", error)
+            return web.Response(text="ERR")
+
+        if "button" not in data or "state" not in data:
+            _LOGGER.error("Webhook payload missing button/state: %s", data)
             return web.Response(text="ERR")
 
         button = data["button"]

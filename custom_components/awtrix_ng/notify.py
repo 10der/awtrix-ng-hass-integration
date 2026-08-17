@@ -1,74 +1,122 @@
 """Support for Awtrix notifications."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
-from homeassistant.components.notify import BaseNotificationService  # type: ignore
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from .common import (
-    async_get_coordinator_by_device_name,
-    async_get_coordinator_devices,
-    getIcon,
+from homeassistant.components.notify import (  # type: ignore
+    NotifyEntity,
+    NotifyEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .common import getIcon
+from .const import DOMAIN
+from .coordinator import AwtrixCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DATA = "data"
-ATTR_TARGET = "target"
 
-async def async_get_service(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> BaseNotificationService | None:
-    """Get the AWTRIX notification service."""
-
-    if discovery_info is None:
-        return None
-    return AwtrixNotificationService(hass=hass)
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up AWTRIX notify entities from a config entry."""
+    async_add_entities([AwtrixNotifyEntity(config_entry.runtime_data.coordinator)])
 
 
-########################################################################################################
+async def _async_send_to_api(
+    hass: HomeAssistant,
+    api: Any,
+    message: str,
+    title: str | None = None,
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Send a notification payload to a single API instance."""
+
+    payload = (data or {}).copy()
+    payload.pop(ATTR_DEVICE_ID, None)
+
+    if title:
+        payload["title"] = title
+
+    if "icon" in payload and str(payload["icon"]).startswith(("http://", "https://")):
+        icon = await hass.async_add_executor_job(getIcon, str(payload["icon"]))
+        if icon:
+            payload["icon"] = icon
+
+    if not message:
+        await api.async_dismiss_notification()
+        return
+
+    payload["text"] = message
+    await api.async_notify(payload)
+
 
 PARALLEL_UPDATES = 1
 
-class AwtrixNotificationService(BaseNotificationService):
-    """Implement the notification service for Awtrix."""
+class AwtrixNotifyEntity(NotifyEntity):
+    """Per-device AWTRIX notify entity."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Init the notification service for Awtrix."""
+    _attr_has_entity_name = True
+    _attr_name = "Notifications"
+    _attr_supported_features = NotifyEntityFeature.TITLE
 
-        self.hass = hass
+    def __init__(self, coordinator: AwtrixCoordinator) -> None:
+        """Initialize the notify entity."""
+        self.coordinator = coordinator
+        uid = coordinator.data["uid"]
+        self._attr_unique_id = f"{uid}_notify"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, uid)},
+            name=uid,
+            model="AWTRIX NG",
+            sw_version=coordinator.data.get("version"),
+            manufacturer="Blueforcer",
+            configuration_url=f"http://{coordinator.data.get('ipAddress')}",
+            suggested_area="Work Room",
+        )
 
-    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to some Awtrix device."""
+    @property
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return self.coordinator.last_update_success
 
-        target_ids = kwargs.get(ATTR_TARGET, 'all')
-        if target_ids == 'all':
-            coordinators = async_get_coordinator_devices(self.hass)
-        else:
-            coordinators = async_get_coordinator_by_device_name(self.hass, target_ids)
-        apis = [x.api for x in coordinators]
+    async def async_added_to_hass(self) -> None:
+        """Refresh availability whenever the coordinator updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
-        data = kwargs.get(ATTR_DATA)
-        for api in apis:
-            await self.notification(api, message, data)
+    async def async_send_message(
+        self, message: str, title: str | None = None
+    ) -> None:
+        """Send a standard notify message."""
+        await _async_send_to_api(
+            self.coordinator.hass,
+            self.coordinator.api,
+            message,
+            title=title,
+        )
 
-    async def notification(self, api, message, data):
-        """Handle the notification service for Awtrix."""
-
-        data = data or {}
-        msg = data.copy()
-        msg["text"] = message
-
-        if 'icon' in msg:
-            if str(msg["icon"]).startswith(('http://', 'https://')):
-                icon = await self.hass.async_add_executor_job(getIcon, str(msg["icon"]))
-                if icon:
-                    msg["icon"] = icon
-
-        if not message:
-            return await api.async_dismiss_notification()
-        return await api.async_notify(msg)
+    async def async_publish_message(
+        self,
+        message: str,
+        title: str | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Send an AWTRIX notification with extended payload."""
+        await _async_send_to_api(
+            self.coordinator.hass,
+            self.coordinator.api,
+            message,
+            title=title,
+            data=data,
+        )
