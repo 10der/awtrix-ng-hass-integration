@@ -50,33 +50,54 @@ Restart Home Assistant and add **AWTRIX NG** from **Settings → Devices & servi
 
 ## Notifications
 
-The integration exposes a single `notify.awtrix_ng` action. Use `data.target` with the device's name (as shown on its device page, or renamed by you in Home Assistant) to send to a specific AWTRIX NG device, or omit `target` to send to all configured devices.
+> [!IMPORTANT]
+> As of v0.2.0 the legacy `notify.awtrix_ng` action (targeting devices by
+> name via `data.target`) and the YAML `notify: platform: awtrix_ng` config
+> are gone. Each AWTRIX device now gets its own notify entity, and
+> notifications are sent with the `awtrix_ng.notify` action, targeted by
+> device or entity instead.
+
+Each configured AWTRIX NG device exposes a `Notifications` notify entity. Send to it with the `awtrix_ng.notify` action, targeting the device (pick it from the target device selector in the UI, or use its `device_id`):
 
 ```yaml
-action: notify.awtrix_ng
+action: awtrix_ng.notify
+target:
+  device_id: <awtrix device_id>
 data:
-  target: awtrix_bedroom
   message: Garage door has been open for 10 minutes.
 ```
 
 Notification with additional AWTRIX NG payload fields:
 
 ```yaml
-action: notify.awtrix_ng
+action: awtrix_ng.notify
+target:
+  device_id: <awtrix device_id>
 data:
-  target: awtrix_bedroom
   message: Garage door has been open for 10 minutes.
   data:
     icon: "33655"
     sound: beep
 ```
 
+You can also target the notify entity directly (e.g. `notify.<device>_notifications`), including with the built-in `notify.send_message` action:
+
+```yaml
+action: notify.send_message
+target:
+  entity_id: notify.awtrix_bedroom_notifications
+data:
+  message: Garage door has been open for 10 minutes.
+  title: Alert
+```
+
 ### Persistent notification
 
 ```yaml
-action: notify.awtrix_ng
+action: awtrix_ng.notify
+target:
+  device_id: <awtrix device_id>
 data:
-  target: awtrix_bedroom
   message: Hello!
   data:
     hold: true
@@ -85,11 +106,16 @@ data:
 Dismiss the active notification by sending an empty message:
 
 ```yaml
-action: notify.awtrix_ng
+action: awtrix_ng.notify
+target:
+  device_id: <awtrix device_id>
 data:
-  target: awtrix_bedroom
   message: ""
 ```
+
+### Device actions
+
+The device also exposes "Send notification to this AWTRIX NG" and "Dismiss notification on this AWTRIX NG" as device actions, so notifications can be added to an automation directly from the device picker without writing YAML.
 
 ## Pushed apps
 
