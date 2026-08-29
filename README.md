@@ -87,6 +87,21 @@ data:
     sound: beep
 ```
 
+Notification playing an RTTTL melody:
+
+```yaml
+action: awtrix_ng.notify
+target:
+  device_id: <awtrix device_id>
+data:
+  message: Garage door has been open for 10 minutes.
+  data:
+    soundRtttl: "two_short:d=4,o=5,b=100:16e6,16e6"
+```
+
+> [!NOTE]
+> Use `soundRtttl`, not `rtttl`, inside notification `data`. AWTRIX NG firmware rejects the whole request on unknown keys, so a bare `rtttl` field is silently dropped. `rtttl` is only valid as a top-level field for the standalone `awtrix_ng.rtttl` action (see [Sounds](#sounds)).
+
 You can also target the notify entity directly (e.g. `notify.<device>_notifications`), including with the built-in `notify.send_message` action:
 
 ```yaml
