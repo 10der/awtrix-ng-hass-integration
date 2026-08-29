@@ -424,10 +424,10 @@ class AwtrixNgApi:
         if selected != 1:
             raise ValueError("Exactly one of name, rtttl or builtin must be supplied")
         payload = {key: value for key, value in {"name": name, "rtttl": rtttl, "builtin": builtin}.items() if value is not None}
-        await self._request("POST", "/api/v1/sounds/play", json=payload, response_type="none")
+        await self._request("POST", "/api/v1/audio/play", json=payload, response_type="none")
 
     async def async_stop_sound(self) -> None:
-        await self._request("POST", "/api/v1/sounds/stop", response_type="none")
+        await self._request("POST", "/api/v1/audio/stop", response_type="none")
 
     # Radio
 
