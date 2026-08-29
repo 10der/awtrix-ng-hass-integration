@@ -120,3 +120,4 @@ class AwtrixNotifyEntity(NotifyEntity):
             title=title,
             data=data,
         )
+        self._async_record_notification()
