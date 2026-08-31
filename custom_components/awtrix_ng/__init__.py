@@ -173,6 +173,9 @@ async def register_webhook_v2(hass: HomeAssistant):
 
         return web.Response(text="OK")
 
-    webhook.async_register(
-        hass, DOMAIN, "Awtrix", "Awtrix-WebHook", handle_webhook
-    )
+    try:
+        webhook.async_register(
+            hass, DOMAIN, "Awtrix", "Awtrix-WebHook", handle_webhook
+        )
+    except ValueError:
+        _LOGGER.debug("Webhook Awtrix-WebHook already registered, skipping")
