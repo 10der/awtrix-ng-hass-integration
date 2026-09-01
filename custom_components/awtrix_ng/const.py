@@ -28,6 +28,7 @@ SERVICE_GET_DEVICE = "get_device"
 SERVICE_SWITCH_APP = "switch_app"
 SERVICE_SOUND = "sound"
 SERVICE_RTTTL = "rtttl"
+SERVICE_OVERLAY = "overlay"
 
 SERVICES = [
     SERVICE_PUSH_APP_DATA,
@@ -37,6 +38,7 @@ SERVICES = [
     SERVICE_SOUND,
     SERVICE_RTTTL,
     SERVICE_SWITCH_APP,
+    SERVICE_OVERLAY,
 ]
 
 SERVICE_DATA = "data"
@@ -82,6 +84,13 @@ SERVICE_RTTTL_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Required(SERVICE_SOUND): str,
+    },
+)
+
+SERVICE_OVERLAY_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Optional(SERVICE_OVERLAY): str,
+        vol.Optional("clear", default=False): bool,
     },
 )
 
@@ -212,6 +221,36 @@ SERVICE_NOTIFY_FIELDS = {
     }
 }
 
+SERVICE_OVERLAY_FIELDS = {
+    "overlay": {
+        "description": "Overlay name to activate (e.g. rain). Omit together with clear=false to leave unchanged.",
+        "required": False,
+        "example": "rain",
+        "selector": {
+            "text": ""
+        }
+    },
+    "clear": {
+        "description": "Set true to remove the active overlay",
+        "required": False,
+        "example": "false",
+        "selector": {
+            "boolean": ""
+        }
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix_ng",
+                "multiple" : True,
+            }
+        }
+    }
+}
+
 SERVICE_DEVICE_TARGET = {
     "device": {
         "integration": DOMAIN
@@ -226,7 +265,8 @@ SERVICE_TO_FIELDS = {
     SERVICE_GET_DEVICE: SERVICE_GET_DEVICE_FIELDS,
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_FIELDS,
     SERVICE_RTTTL: SERVICE_RTTTL_FIELDS,
-    SERVICE_SOUND: SERVICE_SOUND_FIELDS
+    SERVICE_SOUND: SERVICE_SOUND_FIELDS,
+    SERVICE_OVERLAY: SERVICE_OVERLAY_FIELDS
 }
 
 SERVICE_TO_SCHEMA = {
@@ -236,7 +276,8 @@ SERVICE_TO_SCHEMA = {
     SERVICE_GET_DEVICE: SERVICE_GET_DEVICE_SCHEMA,
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_SCHEMA,
     SERVICE_RTTTL: SERVICE_RTTTL_SCHEMA,
-    SERVICE_SOUND: SERVICE_SOUND_SCHEMA
+    SERVICE_SOUND: SERVICE_SOUND_SCHEMA,
+    SERVICE_OVERLAY: SERVICE_OVERLAY_SCHEMA
 }
 
 SERVICE_TO_TARGET = {
@@ -247,4 +288,5 @@ SERVICE_TO_TARGET = {
     SERVICE_SWITCH_APP: SERVICE_DEVICE_TARGET,
     SERVICE_RTTTL: SERVICE_DEVICE_TARGET,
     SERVICE_SOUND: SERVICE_DEVICE_TARGET,
+    SERVICE_OVERLAY: SERVICE_DEVICE_TARGET,
 }

@@ -97,3 +97,13 @@ class AwtrixService:
 
         sound_id = data["sound"]
         return await self.call(lambda x: x.async_play_sound(name=sound_id), self.api(data))
+
+    async def overlay(self, data):
+        """Set or clear the display overlay."""
+
+        overlay_name = data.get("overlay")
+        clear = data.get("clear", False)
+        return await self.call(
+            lambda x: x.async_update_display(overlay=overlay_name, clear_overlay=clear),
+            self.api(data),
+        )
