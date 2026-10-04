@@ -16,7 +16,6 @@ from urllib.parse import quote
 
 from aiohttp import BasicAuth, ClientError, ClientResponse, ClientSession, FormData
 
-from homeassistant.components.apache_kafka import DOMAIN
 from homeassistant.exceptions import ServiceValidationError
 
 JsonObject: TypeAlias = dict[str, Any]
