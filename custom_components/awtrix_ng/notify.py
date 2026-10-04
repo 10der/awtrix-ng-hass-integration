@@ -44,7 +44,8 @@ async def _async_send_to_api(
     payload.pop(ATTR_DEVICE_ID, None)
 
     if title:
-        payload["title"] = title
+        pass
+    #    payload["title"] = title
 
     if "icon" in payload and str(payload["icon"]).startswith(("http://", "https://")):
         icon = await hass.async_add_executor_job(getIcon, str(payload["icon"]))
@@ -95,15 +96,14 @@ class AwtrixNotifyEntity(NotifyEntity):
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    async def async_send_message(
-        self, message: str, title: str | None = None
-    ) -> None:
+    async def async_send_message(self, message: str, title: str | None = None, data: dict[str, Any] | None = None) -> None:
         """Send a standard notify message."""
         await _async_send_to_api(
             self.coordinator.hass,
             self.coordinator.api,
             message,
             title=title,
+            data=data,
         )
 
     async def async_publish_message(

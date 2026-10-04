@@ -114,19 +114,19 @@ class AwtrixLight(AwtrixEntity, LightEntity):
 
         indicator_id = int(self.key[-1])
 
-        self.rgb_color = (255, 255, 255) if self.rgb_color is None else self.rgb_color
-        color = f"#{self.rgb_color[0]:02x}{self.rgb_color[1]:02x}{self.rgb_color[2]:02x}"
+        self._attr_rgb_color = (255, 255, 255) if self._attr_rgb_color is None else self._attr_rgb_color
+        color = f"#{self._attr_rgb_color[0]:02x}{self._attr_rgb_color[1]:02x}{self._attr_rgb_color[2]:02x}"
         self._brightness = 255 if color == "#ffffff" else self._brightness
 
         if ATTR_RGB_COLOR in kwargs:
-            self.rgb_color = kwargs[ATTR_RGB_COLOR]
-            color = f"#{self.rgb_color[0]:02x}{self.rgb_color[1]:02x}{self.rgb_color[2]:02x}"
+            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            color = f"#{self._attr_rgb_color[0]:02x}{self._attr_rgb_color[1]:02x}{self._attr_rgb_color[2]:02x}"
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_BRIGHTNESS in kwargs or ATTR_RGB_COLOR in kwargs:
-            rgb_color = self.adjust_brightness(self.rgb_color, self._brightness)
+            rgb_color = self.adjust_brightness(self._attr_rgb_color, self._brightness)
             color = f"#{rgb_color[0]:02x}{rgb_color[1]:02x}{rgb_color[2]:02x}"
 
         blink_ms = None
@@ -179,12 +179,9 @@ class AwtrixLight(AwtrixEntity, LightEntity):
             indicator_id = int(self.key[-1])
             indicator = indicators[indicator_id - 1] if len(indicators) >= indicator_id else {}
             self._attr_is_on = bool(indicator.get("on"))
-            # color = indicator.get("color")
-            # if color:
-            #     r = int(color[1:3], 16)
-            #     g = int(color[3:5], 16)
-            #     b = int(color[5:7], 16)
-            #     self._attr_rgb_color = (r, g, b)
+            color = indicator.get("color")
+            if color and self._attr_is_on:
+                self._attr_rgb_color = tuple(int(color[i:i + 2], 16) for i in (1, 3, 5))
 
         self.async_write_ha_state()
 
