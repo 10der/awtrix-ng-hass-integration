@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MANUAL_INPUT = "Manually configure AWTRIX NG device"
 
 CONF_DEFAULT_ALERT_SETTINGS = "default_alert_settings"
-DEFAULT_ALERT_SETTINGS = {"sound": "beep", "textColor": "#FF0000", "repeat": 2}
+DEFAULT_ALERT_SETTINGS = {"sound": "18", "textColor": "#FF0000", "repeat": 2}
 
 class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AWTRIX."""
