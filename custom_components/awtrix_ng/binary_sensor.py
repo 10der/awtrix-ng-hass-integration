@@ -47,7 +47,7 @@ class AwtrixBinarySensor(AwtrixEntity, BinarySensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator,
+        coordinator: AwtrixCoordinator,
         key: str,
         name: str | None = None,
         icon: str | None = None
@@ -63,7 +63,7 @@ class AwtrixBinarySensor(AwtrixEntity, BinarySensorEntity):
         super().__init__(coordinator, key)
         self.coordinator.on_press(self.key, self.button_click)
 
-    def button_click(self, state):
+    def button_click(self, state: str) -> None:
         """Set actual state."""
         self._attr_is_on = state == "1"
         self.async_write_ha_state()

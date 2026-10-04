@@ -15,20 +15,21 @@ from .coordinator import AwtrixCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-def getIcon(url):
+def getIcon(url: str) -> str | None:
     """Get icon by url."""
     try:
         timeout = 5
         response = requests.get(url, timeout=timeout)
         if response and response.status_code == 200:
             pil_im = Image.open(BytesIO(response.content))
-            pil_im = pil_im.convert('RGB')
+            rgb_im = pil_im.convert('RGB')
             b = BytesIO()
-            pil_im.save(b, 'jpeg')
+            rgb_im.save(b, 'jpeg')
             im_bytes = b.getvalue()
             return base64.b64encode(im_bytes).decode()
     except Exception:  # noqa: BLE001
         _LOGGER.error("Failed to get ICON %s: action", url)
+    return None
 
 @callback
 def async_get_coordinator_by_device_id(
@@ -45,8 +46,8 @@ def async_get_coordinator_by_device_id(
             (entry := hass.config_entries.async_get_entry(entry_id))
             and entry.domain == DOMAIN
         ):
-            coordinator = entry.runtime_data.coordinator
-            if coordinator.config_entry.entry_id == entry_id:
+            coordinator: AwtrixCoordinator = entry.runtime_data.coordinator
+            if coordinator.entry_id == entry_id:
                 return coordinator
 
     raise ValueError(f"No coordinator for device ID: {device_id}")

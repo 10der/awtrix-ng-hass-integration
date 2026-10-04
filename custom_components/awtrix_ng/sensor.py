@@ -1,7 +1,9 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from datetime import timedelta
+from collections.abc import Callable
+from datetime import datetime, timedelta
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -76,18 +78,18 @@ class CommmonSensor(AwtrixEntity, SensorEntity):
 
     def __init__(self,
                  hass: HomeAssistant,
-                 coordinator,
-                 key,
-                 name=None,
-                 device_class=None,
-                 state_class=None,
-                 icon=None,
-                 measurement=None,
-                 entity_category=None,
-                 value_fn=None,
-                 prefix="",
-                 suffix="",
-                 data_key=None) -> None:
+                 coordinator: AwtrixCoordinator,
+                 key: str,
+                 name: str | None = None,
+                 device_class: SensorDeviceClass | None = None,
+                 state_class: SensorStateClass | None = None,
+                 icon: str | None = None,
+                 measurement: str | None = None,
+                 entity_category: EntityCategory | None = None,
+                 value_fn: Callable[[Any], Any] | None = None,
+                 prefix: str = "",
+                 suffix: str = "",
+                 data_key: str | None = None) -> None:
         """Initialize the entity."""
         self._attr_name = name or key
         self.hass = hass
@@ -132,7 +134,7 @@ class DeviceTemperatureSensor(AwtrixEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator,
+        coordinator: AwtrixCoordinator,
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass
@@ -156,7 +158,7 @@ class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator
+        coordinator: AwtrixCoordinator
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass
@@ -179,7 +181,7 @@ class LuxSensor(AwtrixEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator
+        coordinator: AwtrixCoordinator
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass
@@ -211,7 +213,7 @@ class LastBootSensor(AwtrixEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator,
+        coordinator: AwtrixCoordinator,
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass
@@ -227,7 +229,7 @@ class LastBootSensor(AwtrixEntity, SensorEntity):
 
         boot_time = utcnow() - timedelta(seconds=uptime_seconds)
         previous = self._attr_native_value
-        if previous is not None and abs((boot_time - previous).total_seconds()) <= self._REBOOT_THRESHOLD_SECONDS:
+        if isinstance(previous, datetime) and abs((boot_time - previous).total_seconds()) <= self._REBOOT_THRESHOLD_SECONDS:
             return
 
         self._attr_native_value = boot_time
@@ -245,7 +247,7 @@ class BatteryChargeSensor(AwtrixEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator
+        coordinator: AwtrixCoordinator
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass

@@ -11,10 +11,17 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, TypeAlias
+from typing import Any, Final, TypeAlias, cast
 from urllib.parse import quote
 
-from aiohttp import BasicAuth, ClientError, ClientResponse, ClientSession, FormData
+from aiohttp import (
+    BasicAuth,
+    ClientError,
+    ClientResponse,
+    ClientSession,
+    ClientTimeout,
+    FormData,
+)
 
 from homeassistant.exceptions import ServiceValidationError
 
@@ -124,7 +131,7 @@ class AwtrixNgApi:
             raise ValueError("username and password must be supplied together")
 
         self._session = session
-        self._auth = BasicAuth(username, password) if username is not None else None
+        self._auth = BasicAuth(username, password or "") if username is not None else None
         self._timeout = timeout
 
     @property
@@ -154,7 +161,7 @@ class AwtrixNgApi:
                 data=data,
                 headers=headers,
                 auth=self._auth,
-                timeout=self._timeout if timeout is None else timeout,
+                timeout=ClientTimeout(total=self._timeout if timeout is None else timeout),
             ) as response:
                 await self._raise_for_status(response)
                 if response.status == 204 or response.content_length == 0:
@@ -207,29 +214,32 @@ class AwtrixNgApi:
             field=_as_optional_str(error_body.get("field")),
             raw=raw,
         )
-        kwargs = {
-            "details": details,
-            "response_text": text or None,
-        }
+        reason = response.reason or ""
         if response.status == 401:
-            raise AwtrixNgAuthenticationError(response.status, response.reason, **kwargs)
+            raise AwtrixNgAuthenticationError(
+                response.status, reason, details=details, response_text=text or None
+            )
         if response.status == 404:
-            raise AwtrixNgNotFoundError(response.status, response.reason, **kwargs)
+            raise AwtrixNgNotFoundError(
+                response.status, reason, details=details, response_text=text or None
+            )
         if response.status in {400, 413, 415, 422}:
             raise ServiceValidationError(details.message or details.error or "Invalid request")
 
-        raise AwtrixNgHttpError(response.status, response.reason, **kwargs)
+        raise AwtrixNgHttpError(
+            response.status, reason, details=details, response_text=text or None
+        )
 
     # Device
 
     async def async_get_device(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/device")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/device"))
 
     async def async_get_version(self) -> str:
         result = await self._request("GET", "/api/v1/version")
         if not isinstance(result, dict) or not isinstance(result.get("version"), str):
             raise AwtrixNgApiError("Invalid version response")
-        return result["version"]
+        return cast("str", result["version"])
 
     async def async_reboot(self) -> None:
         await self._request("POST", "/api/v1/device/reboot", response_type="none")
@@ -245,15 +255,15 @@ class AwtrixNgApi:
         await self._request("POST", "/api/v1/device/factory-reset", response_type="none")
 
     async def async_get_capabilities(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/capabilities")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/capabilities"))
 
     # Settings
 
     async def async_get_settings(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/settings")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/settings"))
 
     async def async_update_settings(self, settings: Mapping[str, Any]) -> JsonObject:
-        return await self._request("PATCH", "/api/v1/settings", json=dict(settings))
+        return cast("dict[str, Any]", await self._request("PATCH", "/api/v1/settings", json=dict(settings)))
 
     async def async_reset_settings(self) -> None:
         await self._request("POST", "/api/v1/settings/reset", response_type="none")
@@ -261,7 +271,7 @@ class AwtrixNgApi:
     # Display
 
     async def async_get_display(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/display")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/display"))
 
     async def async_update_display(
         self,
@@ -310,12 +320,12 @@ class AwtrixNgApi:
         await self._request("DELETE", "/api/v1/display/moodlight", response_type="none")
 
     async def async_get_screen(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/display/screen")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/display/screen"))
 
     # Apps
 
     async def async_get_apps(self) -> JsonObject | list[Any]:
-        return await self._request("GET", "/api/v1/apps")
+        return cast("dict[str, Any] | list[Any]", await self._request("GET", "/api/v1/apps"))
 
     async def async_set_active_app(self, name: str, *, fast: bool = False) -> None:
         await self._request(
@@ -352,7 +362,7 @@ class AwtrixNgApi:
 
     async def async_delete_app(self, name: str) -> JsonObject | None:
         _validate_name(name, max_length=32)
-        return await self._request("DELETE", f"/api/v1/apps/{quote(name, safe='')}")
+        return cast("dict[str, Any] | None", await self._request("DELETE", f"/api/v1/apps/{quote(name, safe='')}"))
 
     # Notifications
 
@@ -369,9 +379,9 @@ class AwtrixNgApi:
         await self._request("DELETE", "/api/v1/notifications/active", response_type="none")
 
     async def async_dismiss_named_notification(self, name: str) -> JsonObject | None:
-        return await self._request(
+        return cast("dict[str, Any] | None", await self._request(
             "DELETE", f"/api/v1/notifications/{quote(name, safe='')}"
-        )
+        ))
 
     # Indicators
 
@@ -404,7 +414,7 @@ class AwtrixNgApi:
     # Sounds
 
     async def async_get_sounds(self) -> JsonObject | list[Any]:
-        return await self._request("GET", "/api/v1/sounds")
+        return cast("dict[str, Any] | list[Any]", await self._request("GET", "/api/v1/sounds"))
 
     async def async_save_sound(self, name: str, rtttl: str) -> None:
         _validate_name(name, max_length=24)
@@ -435,7 +445,7 @@ class AwtrixNgApi:
     # Radio
 
     async def async_get_radio(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/radio")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/radio"))
 
     async def async_play_radio(self, station: str | int | Mapping[str, Any]) -> None:
         if isinstance(station, Mapping):
@@ -458,43 +468,43 @@ class AwtrixNgApi:
 
     async def async_get_script(self, name: str) -> str:
         _validate_name(name, max_length=32)
-        return await self._request(
+        return cast("str", await self._request(
             "GET", f"/api/v1/apps/script/{quote(name, safe='')}", response_type="text"
-        )
+        ))
 
     async def async_install_script(self, name: str, source: str) -> JsonObject:
         _validate_name(name, max_length=32)
-        return await self._request(
+        return cast("dict[str, Any]", await self._request(
             "PUT",
             f"/api/v1/apps/script/{quote(name, safe='')}",
             data=source.encode("utf-8"),
             headers={"Content-Type": "text/plain; charset=utf-8"},
-        )
+        ))
 
     async def async_get_shared_script_data(self) -> JsonObject:
-        return await self._request("GET", "/api/v1/scripts/shared")
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/scripts/shared"))
 
     # System
 
     async def async_get_system(self, *, include_secrets: bool = False) -> JsonObject:
-        return await self._request(
+        return cast("dict[str, Any]", await self._request(
             "GET", "/api/v1/system", params={"secrets": _bool_param(include_secrets)}
-        )
+        ))
 
     async def async_update_system(self, config: Mapping[str, Any]) -> JsonObject:
-        return await self._request("PUT", "/api/v1/system", json=dict(config))
+        return cast("dict[str, Any]", await self._request("PUT", "/api/v1/system", json=dict(config)))
 
     async def async_wifi_scan(self) -> JsonObject | list[Any]:
-        return await self._request("GET", "/api/v1/system/wifi-scan")
+        return cast("dict[str, Any] | list[Any]", await self._request("GET", "/api/v1/system/wifi-scan"))
 
     async def async_get_logs(self, *, after: int | None = None) -> JsonObject:
         params = {"after": after} if after is not None else None
-        return await self._request("GET", "/api/v1/logs", params=params)
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/logs", params=params))
 
     # Files and firmware
 
     async def async_list_files(self, directory: str = "/ICONS") -> JsonObject | list[Any]:
-        return await self._request("GET", "/api/v1/files", params={"dir": directory})
+        return cast("dict[str, Any] | list[Any]", await self._request("GET", "/api/v1/files", params={"dir": directory}))
 
     async def async_upload_file(
         self,
@@ -536,7 +546,7 @@ class AwtrixNgApi:
         data, inferred_name = _read_file_source(archive)
         form = FormData()
         form.add_field("file", data, filename=filename or inferred_name, content_type="application/zip")
-        return await self._request("POST", "/api/v1/restore", data=form, timeout=timeout)
+        return cast("dict[str, Any]", await self._request("POST", "/api/v1/restore", data=form, timeout=timeout))
 
 
 def _as_optional_str(value: Any) -> str | None:

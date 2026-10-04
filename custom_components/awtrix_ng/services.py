@@ -1,8 +1,14 @@
 """Global services file."""
 
 from functools import partial
+from typing import cast
 
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.helpers.service import (
     async_register_platform_entity_service,
     async_set_service_schema,
@@ -53,12 +59,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_PUSH_APP_DATA):
         return
 
-    async def service_handler(awtrixService, service, call: ServiceCall) -> None:
+    async def service_handler(
+        awtrixService: AwtrixService, service: str, call: ServiceCall
+    ) -> ServiceResponse:
         """Handle service call."""
 
         func = getattr(awtrixService, service)
         if func:
-            return await func(call.data)
+            return cast(ServiceResponse, await func(call.data))
         return None
 
     awtrixService = AwtrixService(hass)

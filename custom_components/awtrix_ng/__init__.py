@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle config options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -101,7 +101,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -
     # Unload platforms and return result
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
-async def register_webhook_v1(hass: HomeAssistant, config_entry):
+async def register_webhook_v1(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Register webhook V1."""
 
     async def handle_webhook(
@@ -126,9 +126,7 @@ async def register_webhook_v1(hass: HomeAssistant, config_entry):
         coordinators =  async_get_coordinator_by_device_name(hass, [device_name])
         coordinator = next(iter(coordinators), None)
         if coordinator is not None:
-            button = data["button"]
-            state = data["state"]
-            coordinator.action_press(button, state)
+            coordinator.action_press(str(data["button"]), str(data["state"]))
 
         return web.Response(text="OK")
 
@@ -136,7 +134,7 @@ async def register_webhook_v1(hass: HomeAssistant, config_entry):
     #     hass, DOMAIN, "Awtrix", config_entry.unique_id, handle_webhook
     # )
 
-async def register_webhook_v2(hass: HomeAssistant):
+async def register_webhook_v2(hass: HomeAssistant) -> None:
     """Register webhook V2."""
 
     async def handle_webhook(
@@ -162,8 +160,8 @@ async def register_webhook_v2(hass: HomeAssistant):
             _LOGGER.error("Webhook payload missing button/state: %s", data)
             return web.Response(text="ERR")
 
-        button = data["button"]
-        state = data["state"]
+        button = str(data["button"])
+        state = str(data["state"])
         uid = str(data.get("uid"))
         if uid is not None:
             coordinators =  async_get_coordinator_by_device_name(hass, [uid])

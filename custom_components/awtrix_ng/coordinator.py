@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for our integration."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -32,6 +33,9 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
+        self.entry_id: str = config_entry.entry_id
+        self.unique_id: str | None = config_entry.unique_id
+        self.options = config_entry.options
 
         # set variables from options.  You need a default here in case options have not been set
         self.poll_interval = config_entry.options.get(
@@ -60,7 +64,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             password=self.pwd or None,
             port=80,
         )
-        self.on_button_click = {}
+        self.on_button_click: dict[str, Callable[[str], None]] = {}
 
     async def async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint.
@@ -85,7 +89,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def fire_event(
         self,
         args: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Fire HA event."""
 
         event_name = f"{DOMAIN}_event"
@@ -95,11 +99,11 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             args,
         )
 
-    def on_press(self, key: str, action):
+    def on_press(self, key: str, action: Callable[[str], None]) -> None:
         """Set action on hardware button click."""
         self.on_button_click[key] = action
 
-    def action_press(self, button, state):
+    def action_press(self, button: str, state: str) -> None:
         """On hardware button click."""
         # left middle right
 

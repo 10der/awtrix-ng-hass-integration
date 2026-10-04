@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.notify import (  # type: ignore
+from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
@@ -79,7 +79,7 @@ class AwtrixNotifyEntity(NotifyEntity):
             configuration_url=f"http://{coordinator.data.get('ipAddress')}",
             suggested_area="Work Room",
         )
-        self.default_notification_settings = coordinator.config_entry.options.get("default_alert_settings", {})
+        self.default_notification_settings = coordinator.options.get("default_alert_settings", {})
 
     @property
     def available(self) -> bool:

@@ -1,11 +1,15 @@
 """Core components of AWTRIX Light."""
 
+from collections.abc import Awaitable, Callable
 import logging
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 
+from .awtrix_ng_api import AwtrixNgApi
 from .common import async_get_coordinator_by_device_id, getIcon
 from .const import CONF_DEVICE_ID
+from .coordinator import AwtrixCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +24,10 @@ class AwtrixService:
 
         self.hass = hass
 
-    def api(self, data):
+    def api(self, data: dict[str, Any]) -> list[AwtrixCoordinator]:
         """Create API on the fly."""
-        result = []
-        for device_id in data.get(CONF_DEVICE_ID):
+        result: list[AwtrixCoordinator] = []
+        for device_id in data.get(CONF_DEVICE_ID, []):
             try:
                 coordinator = async_get_coordinator_by_device_id(self.hass, device_id)
                 result.append(coordinator)
@@ -31,11 +35,15 @@ class AwtrixService:
                 _LOGGER.error("Failed to coordinator for %s", device_id)
         return result
 
-    async def call(self, func, seq):
+    async def call(
+        self,
+        func: Callable[[AwtrixNgApi], Awaitable[Any]],
+        seq: list[AwtrixCoordinator],
+    ) -> dict[str, Any]:
         """Call action API."""
-        result = []
+        result: list[dict[str | None, Any]] = []
         for i in seq:
-            uniq_id = i.config_entry.unique_id
+            uniq_id = i.unique_id
             try:
                 res =  await func(i.api)
                 result.append({uniq_id: res})
@@ -45,7 +53,7 @@ class AwtrixService:
 
         return {"result" : result}
 
-    async def push_app_data(self, data):
+    async def push_app_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Update the application data."""
 
         app_id = data["name"]
@@ -63,13 +71,13 @@ class AwtrixService:
 
         return await self.call(lambda x: x.async_push_app(app_id, payload), self.api(data))
 
-    async def switch_app(self, data):
+    async def switch_app(self, data: dict[str, Any]) -> dict[str, Any]:
         """Call API switch app."""
 
         app_id = data["name"]
         return await self.call(lambda x: x.async_set_active_app(app_id), self.api(data))
 
-    async def settings(self, data):
+    async def settings(self, data: dict[str, Any]) -> dict[str, Any]:
         """Call API settings."""
 
         data = data or {}
@@ -78,27 +86,27 @@ class AwtrixService:
 
         return await self.call(lambda x: x.async_update_settings(payload), self.api(data))
 
-    async def get_settings(self, data):
+    async def get_settings(self, data: dict[str, Any]) -> dict[str, Any]:
         """Call API get settings."""
         return await self.call(lambda x: x.async_get_settings(), self.api(data))
 
-    async def get_device(self, data):
+    async def get_device(self, data: dict[str, Any]) -> dict[str, Any]:
         """Call API get device."""
         return await self.call(lambda x: x.async_get_device(), self.api(data))
 
-    async def rtttl(self, data):
+    async def rtttl(self, data: dict[str, Any]) -> dict[str, Any]:
         """Play rtttl."""
 
         rtttl_data = data["rtttl"]
         return await self.call(lambda x: x.async_play_sound(rtttl=rtttl_data), self.api(data))
 
-    async def sound(self, data):
+    async def sound(self, data: dict[str, Any]) -> dict[str, Any]:
         """Play rtttl sound."""
 
         sound_id = data["sound"]
         return await self.call(lambda x: x.async_play_sound(name=sound_id), self.api(data))
 
-    async def overlay(self, data):
+    async def overlay(self, data: dict[str, Any]) -> dict[str, Any]:
         """Set or clear the display overlay."""
 
         overlay_name = data.get("overlay")

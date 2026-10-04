@@ -41,7 +41,8 @@ async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    return ACTION_SCHEMA(config)
+    validated: ConfigType = ACTION_SCHEMA(config)
+    return validated
 
 
 async def async_get_actions(

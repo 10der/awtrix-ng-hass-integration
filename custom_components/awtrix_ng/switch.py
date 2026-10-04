@@ -48,7 +48,7 @@ class AwtrixSwitch(AwtrixEntity, SwitchEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator,
+        coordinator: AwtrixCoordinator,
         key: str,
         data_key: str,
         name: str | None = None,

@@ -51,8 +51,8 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Init discovery flow."""
         self.device_id = None
-        self.devices = []
-        self.awtrix_config = {}
+        self.devices: list[dict[str, Any]] = []
+        self.awtrix_config: dict[str, Any] = {}
         self._discovered_device: dict[str, Any] | None = None  #tuple[dict[str, Any], str] | None = None
 
     async def async_step_zeroconf(
@@ -73,7 +73,9 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
 
         device = self._discovered_device
@@ -103,7 +105,9 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
         )
 
-    async def async_step_device(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle auto discovery."""
 
         if user_input:
@@ -162,7 +166,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title = f"{self.device_id}"
                 return self.async_create_entry(title=title, data=self.awtrix_config)
 
-        def conf(name, default=None):
+        def conf(name: str, default: Any = None) -> Any:
             return self.awtrix_config.get(name, default)
 
         # Username and Password are optional and default empty

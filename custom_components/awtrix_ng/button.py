@@ -50,7 +50,7 @@ class AwtrixButton(AwtrixEntity, ButtonEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator,
+        coordinator: AwtrixCoordinator,
         key: str,
         name: str | None = None,
         icon: str | None = None

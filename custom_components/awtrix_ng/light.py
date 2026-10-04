@@ -71,10 +71,10 @@ class AwtrixLight(AwtrixEntity, LightEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator,
+        coordinator: AwtrixCoordinator,
         key: str,
         name: str | None = None,
-        mode=None,
+        mode: ColorMode | None = None,
         icon: str | None = None
     ) -> None:
         """Initialize the light."""
@@ -155,7 +155,9 @@ class AwtrixLight(AwtrixEntity, LightEntity):
         await self.coordinator.async_refresh()
 
 
-    def adjust_brightness(self, color, brightness_percent):
+    def adjust_brightness(
+        self, color: tuple[int, int, int], brightness_percent: int
+    ) -> tuple[int, int, int]:
         """Adjust the brightness of an RGB color."""
         # Ensure brightness_percent is between 1 and 255
         brightness_percent = max(1, min(255, brightness_percent))
@@ -181,7 +183,11 @@ class AwtrixLight(AwtrixEntity, LightEntity):
             self._attr_is_on = bool(indicator.get("on"))
             color = indicator.get("color")
             if color and self._attr_is_on:
-                self._attr_rgb_color = tuple(int(color[i:i + 2], 16) for i in (1, 3, 5))
+                self._attr_rgb_color = (
+                    int(color[1:3], 16),
+                    int(color[3:5], 16),
+                    int(color[5:7], 16),
+                )
 
         self.async_write_ha_state()
 

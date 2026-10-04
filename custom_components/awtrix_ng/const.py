@@ -1,5 +1,7 @@
 """Constants for Awtrix time."""
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import Platform
@@ -69,7 +71,7 @@ SERVICE_SWITCH_APP_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     },
 )
 
-SERVICE_NOTIFY_SCHEMA = {
+SERVICE_NOTIFY_SCHEMA: dict[str | vol.Marker, Any] = {
     vol.Required("message"): str,
     vol.Optional("data", default={}): dict,
     vol.Optional("title"): str,
@@ -191,9 +193,9 @@ SERVICE_SETTINGS_FIELDS = {
     }
 }
 
-SERVICE_GET_SETTINGS_FIELDS = {}
+SERVICE_GET_SETTINGS_FIELDS: dict[str, Any] = {}
 
-SERVICE_GET_DEVICE_FIELDS = {}
+SERVICE_GET_DEVICE_FIELDS: dict[str, Any] = {}
 
 SERVICE_NOTIFY_FIELDS = {
     "message": {
