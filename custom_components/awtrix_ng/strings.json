@@ -67,5 +67,23 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AWTRIX NG options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)",
+          "default_alert_settings": "Default notification settings"
+        },
+        "data_description": {
+          "default_alert_settings": "Payload keys merged into notifications sent without `data` (e.g. sound, textColor, repeat)."
+        }
+      }
+    },
+    "error": {
+      "invalid_yaml": "Invalid YAML",
+      "not_a_dict": "Must be a mapping"
+    }
   }
 }

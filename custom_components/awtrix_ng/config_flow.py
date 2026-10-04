@@ -7,33 +7,46 @@ import socket
 from typing import Any
 
 import voluptuous as vol
+import yaml
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .awtrix_ng_api import AwtrixNgApi, AwtrixNgApiError, AwtrixNgAuthenticationError
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MANUAL_INPUT = "Manually configure AWTRIX NG device"
 
+CONF_DEFAULT_ALERT_SETTINGS = "default_alert_settings"
+DEFAULT_ALERT_SETTINGS = {"sound": "beep", "textColor": "#FF0000", "repeat": 2}
 
 class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AWTRIX."""
 
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> AwtrixOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return AwtrixOptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Init discovery flow."""
@@ -278,3 +291,59 @@ def _discover_devices() -> list[dict[str, Any]]:
                 break
 
     return devices
+
+class AwtrixOptionsFlowHandler(OptionsFlow):
+    """Handles the options flow."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            alert_settings = user_input.get(CONF_DEFAULT_ALERT_SETTINGS)
+
+            if isinstance(alert_settings, str):
+                try:
+                    parsed_yaml = yaml.safe_load(alert_settings) or {}
+                    if not isinstance(parsed_yaml, dict):
+                        errors[CONF_DEFAULT_ALERT_SETTINGS] = "not_a_dict"
+                    else:
+                        user_input[CONF_DEFAULT_ALERT_SETTINGS] = parsed_yaml
+                except yaml.YAMLError:
+                    errors[CONF_DEFAULT_ALERT_SETTINGS] = "invalid_yaml"
+
+            if not errors:
+                self.options.update(user_input)
+                return self.async_create_entry(title="", data=self.options)
+
+        # Початкове значення для поля alert settings
+        current_alert_settings = self.options.get(
+            CONF_DEFAULT_ALERT_SETTINGS, DEFAULT_ALERT_SETTINGS
+        )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=self.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
+
+
+                vol.Optional(
+                    CONF_DEFAULT_ALERT_SETTINGS,
+                    default=current_alert_settings,
+                ): selector.ObjectSelector(),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init", data_schema=data_schema, errors=errors
+        )

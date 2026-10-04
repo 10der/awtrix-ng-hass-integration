@@ -79,6 +79,7 @@ class AwtrixNotifyEntity(NotifyEntity):
             configuration_url=f"http://{coordinator.data.get('ipAddress')}",
             suggested_area="Work Room",
         )
+        self.default_notification_settings = coordinator.config_entry.options.get("default_alert_settings", {})
 
     @property
     def available(self) -> bool:
@@ -97,10 +98,7 @@ class AwtrixNotifyEntity(NotifyEntity):
 
         data = data or {}
         if not data:
-            pass # todo - default values for data, e.g. sound, repeat, textColor, etc. For now, we just send the message as is.
-            # data["sound"] = "18"
-            # data["repeat"] = 2
-            # data["textColor"] = '#FF0000'
+            data |= self.default_notification_settings
 
         await _async_send_to_api(
             self.coordinator.hass,
