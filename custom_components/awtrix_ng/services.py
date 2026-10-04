@@ -50,7 +50,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 "description": "Send a notification to one or more AWTRIX NG notify entities.",
                 "fields": SERVICE_NOTIFY_FIELDS,
                 "target": {
-                    "entity": {"domain": "notify", "integration": DOMAIN},
+                    "entity": [{"domain": "notify", "integration": DOMAIN}],
                     "device": {"integration": DOMAIN},
                 },
             },

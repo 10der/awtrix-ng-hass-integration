@@ -5,7 +5,7 @@ blueprint:
   input:
     app_name:
       name: (Required) Application name
-      description: "Application name"
+      description: "Application name: letters, digits, '_' and '-' only (no spaces), max 32 characters"
       default: "awtrix_app"
       selector:
         text:

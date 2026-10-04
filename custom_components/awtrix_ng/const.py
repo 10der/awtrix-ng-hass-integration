@@ -48,6 +48,15 @@ SERVICE_APP_NAME = "name"
 CONF_DEVICE_ID = "device_id"
 
 # Schemas
+APP_NAME_SCHEMA = vol.All(
+    str,
+    vol.Length(min=1, max=32),
+    vol.Match(
+        r"^[A-Za-z0-9_-]+$",
+        msg="Application name may contain only letters, digits, '_' and '-'",
+    ),
+)
+
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
         # vol.Optional(CONF_DEVICE_ID): cv.string,
@@ -60,7 +69,7 @@ SERVICE_BASE_SCHEMA = vol.Schema(
 
 SERVICE_PUSH_APP_DATA_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Required(SERVICE_APP_NAME): str,
+        vol.Required(SERVICE_APP_NAME): APP_NAME_SCHEMA,
         vol.Required(SERVICE_DATA, default={}): dict
     },
 )
