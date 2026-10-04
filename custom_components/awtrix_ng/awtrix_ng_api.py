@@ -16,6 +16,9 @@ from urllib.parse import quote
 
 from aiohttp import BasicAuth, ClientError, ClientResponse, ClientSession, FormData
 
+from homeassistant.components.apache_kafka import DOMAIN
+from homeassistant.exceptions import ServiceValidationError
+
 JsonObject: TypeAlias = dict[str, Any]
 JsonValue: TypeAlias = str | int | float | bool | None | JsonObject | list["JsonValue"]
 Color: TypeAlias = int | str | Sequence[int] | tuple[str, int, int, int]
@@ -214,7 +217,8 @@ class AwtrixNgApi:
         if response.status == 404:
             raise AwtrixNgNotFoundError(response.status, response.reason, **kwargs)
         if response.status in {400, 413, 415, 422}:
-            raise AwtrixNgValidationError(response.status, response.reason, **kwargs)
+            raise ServiceValidationError(details.message or details.error or "Invalid request")
+
         raise AwtrixNgHttpError(response.status, response.reason, **kwargs)
 
     # Device

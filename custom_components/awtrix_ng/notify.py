@@ -35,17 +35,13 @@ async def _async_send_to_api(
     hass: HomeAssistant,
     api: Any,
     message: str,
-    title: str | None = None,
+    title: str | None = None, # not used for now, but could be used in the future for more advanced notifications
     data: dict[str, Any] | None = None,
 ) -> None:
     """Send a notification payload to a single API instance."""
 
     payload = (data or {}).copy()
     payload.pop(ATTR_DEVICE_ID, None)
-
-    # `title` is intentionally not forwarded: the AWTRIX NG API has no such
-    # field and rejects the whole request on unknown keys. It is accepted so
-    # notify.send_message with a title does not fail.
 
     if "icon" in payload and str(payload["icon"]).startswith(("http://", "https://")):
         icon = await hass.async_add_executor_job(getIcon, str(payload["icon"]))
@@ -98,6 +94,14 @@ class AwtrixNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None, data: dict[str, Any] | None = None) -> None:
         """Send a standard notify message."""
+
+        data = data or {}
+        if not data:
+            pass # todo - default values for data, e.g. sound, repeat, textColor, etc. For now, we just send the message as is.
+            # data["sound"] = "18"
+            # data["repeat"] = 2
+            # data["textColor"] = '#FF0000'
+
         await _async_send_to_api(
             self.coordinator.hass,
             self.coordinator.api,
@@ -105,6 +109,7 @@ class AwtrixNotifyEntity(NotifyEntity):
             title=title,
             data=data,
         )
+        self._async_record_notification()
 
     async def async_publish_message(
         self,
