@@ -43,9 +43,9 @@ async def _async_send_to_api(
     payload = (data or {}).copy()
     payload.pop(ATTR_DEVICE_ID, None)
 
-    if title:
-        pass
-    #    payload["title"] = title
+    # `title` is intentionally not forwarded: the AWTRIX NG API has no such
+    # field and rejects the whole request on unknown keys. It is accepted so
+    # notify.send_message with a title does not fail.
 
     if "icon" in payload and str(payload["icon"]).startswith(("http://", "https://")):
         icon = await hass.async_add_executor_job(getIcon, str(payload["icon"]))
