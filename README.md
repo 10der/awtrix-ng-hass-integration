@@ -29,7 +29,7 @@ Supports:
 >
 > When migrating automations from AWTRIX 3, both the Home Assistant service convention and the AWTRIX payload keys must be updated.
 >
-> See the official migration guide: https://ang.blueforcer.de/guides/migrating-from-awtrix3/
+> See the official migration guide: https://blueforcer.github.io/awtrix-ng/guides/migrating-from-awtrix3/
 
 ## Installation
 
@@ -292,7 +292,7 @@ No Home Assistant restart is needed; the webhook is registered as soon as the in
 > [!NOTE]
 > AWTRIX sends this webhook over plain HTTP only (no HTTPS) and requires Home Assistant to be reachable on the same local network. If `buttonCallback` is left empty, the button sensors stay `off`.
 >
-> Reference: https://ang.blueforcer.de/reference/system/?h=webhook#buttons
+> Reference: https://blueforcer.github.io/awtrix-ng/reference/system/?h=webhook#buttons
 
 > [!WARNING]
 > **Known security issue:** the webhook ID (`Awtrix-WebHook`) is a fixed string hard-coded in this integration's source, identical for every installation - it is not a per-install secret. Home Assistant webhooks are unauthenticated by design, so anyone who can reach `/api/webhook/Awtrix-WebHook` on your Home Assistant instance (anyone on your LAN, or on the internet if your instance is exposed via port-forwarding, a reverse proxy, or Nabu Casa remote access) can POST forged button-press events, without touching the physical device, and trigger any automation wired to a button press. A fix (a random, per-installation webhook ID) is planned but not yet implemented - track this before relying on button-press automations for anything security-sensitive.
