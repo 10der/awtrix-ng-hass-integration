@@ -1,8 +1,16 @@
 blueprint:
   name: AWTRIX NG show entity
-  description: Show entity
+  description: >-
+    Show an entity on AWTRIX NG (TC001 / ESP32, 32x8).
+    Fully compatible with the previous version: every new option is off by default.
+    New: number formatting, units, color thresholds, palettes, progress bar,
+    bar/line chart, background effects and weather overlays.
   domain: automation
+  source_url: https://github.com/10der/awtrix-ng-hass-integration/blob/main/awtrix-ng-simple.yaml
+  homeassistant:
+    min_version: 2024.10.0
   input:
+    # ---------- unchanged inputs (same keys as before) ----------
     app_name:
       name: (Required) Application name
       description: "Application name: letters, digits, '_' and '-' only (no spaces), max 32 characters"
@@ -14,7 +22,7 @@ blueprint:
 
     app_icon:
       name: Application Icon
-      description: "Application icon"
+      description: "Icon ID, JPEG/GIF data URL or http(s) URL"
       default: ""
       selector:
         text:
@@ -37,48 +45,10 @@ blueprint:
 
     suffix_text:
       name: Text suffix
-      description: "Text suffix"
+      description: "Text suffix (wins over Auto unit)"
       selector:
         object:
       default: ""
-
-    extra_triggers:
-      name: Extra Triggers
-      description: Additional triggers to actions.
-      default:
-      selector:
-          trigger:
-
-    pre_actions:
-      name: Actions
-      description: Actions when starting...
-      selector:
-        action:
-      default:
-
-    additional_options:
-      name: Additional options
-      description: Extra options
-      selector:
-        object:
-      default: {}
-
-    user_options:
-      name: AWTRIX NG application options
-      description: AWTRIX NG application useroptions.
-      selector:
-        object:
-      default:
-        durationMs: 5000
-
-    additional_conditions:
-      name: Additional conditions
-      description: |
-        Extra conditions you may want to add to this automation 
-        (Example: Home occupied, TV on, etc)
-      default: []
-      selector:
-        condition:
 
     awtrix_device:
       name: AWTRIX NG device
@@ -91,16 +61,299 @@ blueprint:
           model: "AWTRIX NG"
           multiple: true
 
-trigger:
-  - platform: state
-    entity_id: !input entity  
+    # ---------- new, all off by default ----------
+    look_section:
+      name: Value & color
+      icon: mdi:palette
+      collapsed: true
+      input:
+        decimals:
+          name: Decimals
+          description: "-1 = show the value as is"
+          default: -1
+          selector:
+            number:
+              min: -1
+              max: 4
+              step: 1
+              mode: box
+        auto_unit:
+          name: Auto unit
+          description: Append the entity's unit of measurement when "Text suffix" is empty.
+          default: false
+          selector:
+            boolean:
+        unavailable_text:
+          name: Text when unknown / unavailable
+          description: Empty = show the state as is.
+          default: ""
+          selector:
+            text:
+        color_mode:
+          name: Color mode
+          default: none
+          selector:
+            select:
+              options:
+                - label: Clock default (as before)
+                  value: none
+                - label: Fixed color
+                  value: fixed
+                - label: Thresholds
+                  value: thresholds
+                - label: Palette (gradient)
+                  value: palette
+        value_color:
+          name: Fixed color
+          default: [255, 255, 255]
+          selector:
+            color_rgb:
+        thresholds:
+          name: Thresholds
+          description: >-
+            First rule whose `below` is greater than the value wins.
+            A rule without `below` is the fallback.
+          default:
+            - below: 0
+              color: "#00AAFF"
+            - below: 25
+              color: "#00FF00"
+            - color: "#FF4400"
+          selector:
+            object:
+        unit_color:
+          name: Unit color
+          description: Used with Fixed color and Thresholds.
+          default: [170, 170, 170]
+          selector:
+            color_rgb:
+        palette_name:
+          name: Palette
+          description: "Palette name (e.g. Rainbow, Lava) for Palette mode and effects."
+          default: Rainbow
+          selector:
+            text:
+
+    progress_section:
+      name: Progress bar
+      icon: mdi:progress-helper
+      collapsed: true
+      input:
+        progress_mode:
+          name: Progress bar
+          default: none
+          selector:
+            select:
+              options:
+                - label: "Off"
+                  value: none
+                - label: From the value (min..max)
+                  value: value
+        progress_min:
+          name: Value at 0 %
+          default: 0
+          selector:
+            number:
+              min: -1000000
+              max: 1000000
+              step: any
+              mode: box
+        progress_max:
+          name: Value at 100 %
+          default: 100
+          selector:
+            number:
+              min: -1000000
+              max: 1000000
+              step: any
+              mode: box
+        progress_use_value_color:
+          name: Bar uses the value color
+          default: true
+          selector:
+            boolean:
+        progress_color:
+          name: Bar color
+          default: [0, 170, 255]
+          selector:
+            color_rgb:
+        track_color:
+          name: Track color
+          default: [32, 32, 32]
+          selector:
+            color_rgb:
+
+    chart_section:
+      name: Chart
+      icon: mdi:chart-bar
+      collapsed: true
+      input:
+        chart_type:
+          name: Chart
+          default: none
+          selector:
+            select:
+              options:
+                - label: "Off"
+                  value: none
+                - label: Bars
+                  value: bar
+                - label: Line
+                  value: line
+        chart_entity:
+          name: Chart entity
+          description: Entity holding the list of values (empty = main entity).
+          default: []
+          selector:
+            entity:
+        chart_attribute:
+          name: Attribute with values
+          description: "A list of numbers, or a list of objects (e.g. Nord Pool `raw_today`). Last 16 are shown."
+          default: ""
+          selector:
+            text:
+        chart_value_key:
+          name: Key inside objects
+          default: value
+          selector:
+            text:
+        chart_scale:
+          name: Scale
+          description: "Charts take whole numbers: 0.25 with scale 100 becomes 25."
+          default: 1
+          selector:
+            number:
+              min: 0.001
+              max: 100000
+              step: any
+              mode: box
+        chart_color:
+          name: Chart color
+          description: Drawn behind the text, so a dim color reads best.
+          default: [0, 60, 120]
+          selector:
+            color_rgb:
+
+    background_section:
+      name: Background & scrolling
+      icon: mdi:weather-snowy
+      collapsed: true
+      input:
+        effect:
+          name: Background effect
+          description: "Effect name, e.g. Plasma, Matrix (empty = none)."
+          default: ""
+          selector:
+            text:
+        effect_speed:
+          name: Effect speed
+          default: 1
+          selector:
+            number:
+              min: 0.1
+              max: 10
+              step: 0.1
+        overlay:
+          name: Weather overlay
+          default: ""
+          selector:
+            select:
+              options:
+                - label: None
+                  value: ""
+                - label: Rain
+                  value: rain
+                - label: Drizzle
+                  value: drizzle
+                - label: Snow
+                  value: snow
+                - label: Storm
+                  value: storm
+                - label: Thunder
+                  value: thunder
+                - label: Frost
+                  value: frost
+        scroll_mode:
+          name: Scroll mode
+          default: ""
+          selector:
+            select:
+              options:
+                - label: Clock default
+                  value: ""
+                - label: Loop
+                  value: loop
+                - label: Wrap
+                  value: wrap
+                - label: Bounce
+                  value: bounce
+                - label: Static
+                  value: static
+
+    advanced_section:
+      name: Advanced
+      icon: mdi:cog
+      collapsed: true
+      input:
+        extra_triggers:
+          name: Extra Triggers
+          description: Additional triggers to actions.
+          default: []
+          selector:
+              trigger:
+
+        pre_actions:
+          name: Actions
+          description: Actions when starting...
+          selector:
+            action:
+          default: []
+
+        additional_options:
+          name: Additional options
+          description: >-
+            Your own variables, computed first and usable in every template below.
+            Special names: value_template, icon_template, color_template (#RRGGBB),
+            progress_template (0-100), chart_template (list of numbers).
+          selector:
+            object:
+          default: {}
+
+        user_options:
+          name: AWTRIX NG application options
+          description: Raw app keys. Applied last, so they win over everything above.
+          selector:
+            object:
+          default:
+            durationMs: 5000
+
+        additional_conditions:
+          name: Additional conditions
+          description: |
+            Extra conditions you may want to add to this automation
+            (Example: Home occupied, TV on, etc)
+          default: []
+          selector:
+            condition:
+
+mode: queued
+max: 10
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: !input entity
     id: update
 
-  - platform: homeassistant
+  - trigger: state
+    entity_id: !input chart_entity
+    id: update
+
+  - trigger: homeassistant
     event: start
     id: update
 
-  - platform: event
+  - trigger: event
     event_type: automation_reloaded
     id: update
 
@@ -111,53 +364,151 @@ variables:
   app_name: !input app_name
   app_icon: !input app_icon
   additional_conditions: !input additional_conditions
+  chart_entity_input: !input chart_entity
 
-condition: []
+conditions: []
 
-action:
+actions:
   - choose: []
     default: !input pre_actions
 
-  - &variable_entity
-    alias: Variable Entity
-    variables:
-      !input additional_options
+  - alias: Variable Entity
+    variables: !input additional_options
 
   - variables:
-      <<: *variable_entity
       device_ids: !input awtrix_device
-      # deprecated !
+      # deprecated, kept for compatibility
       user_data: !input additional_options
-
-      value_template: "{{ user_data.get('value_template', states(entity_id)) }}"
-      icon_template: "{{ user_data.get('icon_template', app_icon) }}"
+      custom_value: "{{ 'value_template' in (user_data or {}) }}"
+      value_template: "{{ (user_data or {}).get('value_template', states(entity_id)) }}"
+      icon_template: "{{ (user_data or {}).get('icon_template', app_icon) }}"
       prefix_text: !input prefix_text
       suffix_text: !input suffix_text
       user_options: !input user_options
-      payload: |-
-        {
-          {{('"icon"' if icon_template) ~ (":" if icon_template) ~ ('"' ~ icon_template ~ '"' if icon_template) }}
-          {{"," if icon_template}} "text":"{{prefix_text~value_template~suffix_text}}"
-        }
+
+      decimals: !input decimals
+      auto_unit: !input auto_unit
+      unavailable_text: !input unavailable_text
+      color_mode: !input color_mode
+      value_color_rgb: !input value_color
+      thresholds: !input thresholds
+      unit_color_rgb: !input unit_color
+      palette_name: !input palette_name
+      progress_mode: !input progress_mode
+      progress_min: !input progress_min
+      progress_max: !input progress_max
+      progress_use_value_color: !input progress_use_value_color
+      progress_color_rgb: !input progress_color
+      track_color_rgb: !input track_color
+      chart_type: !input chart_type
+      chart_attribute: !input chart_attribute
+      chart_value_key: !input chart_value_key
+      chart_scale: !input chart_scale
+      chart_color_rgb: !input chart_color
+      effect: !input effect
+      effect_speed: !input effect_speed
+      overlay: !input overlay
+      scroll_mode: !input scroll_mode
+
+  - variables:
+      hex: >-
+        {% set ns = namespace(d={}) %}
+        {% for k, c in [('value', value_color_rgb), ('unit', unit_color_rgb), ('progress', progress_color_rgb),
+                        ('track', track_color_rgb), ('chart', chart_color_rgb)] %}
+          {% set c = c | map('int') | list %}
+          {% set ns.d = dict(ns.d, **{k: '#%02X%02X%02X' | format(c[0], c[1], c[2])}) %}
+        {% endfor %}
+        {{ ns.d }}
+
+      value_bad: "{{ (value_template | string) in ['unknown', 'unavailable', 'None', ''] }}"
+      value_num: "{{ none if value_bad else (value_template | float(none)) }}"
+
+      value_text: >-
+        {% if value_bad and unavailable_text %}{{ unavailable_text }}
+        {% elif value_num is not none and (decimals | int) >= 0 %}{{ ('%.' ~ (decimals | int) ~ 'f') | format(value_num) }}
+        {% else %}{{ value_template }}{% endif %}
+
+      unit_text: >-
+        {% set s = (suffix_text if suffix_text is not none else '') | string %}
+        {% if s %}{{ s }}
+        {% elif auto_unit and not custom_value and not value_bad %}{{ state_attr(entity_id, 'unit_of_measurement') or '' }}
+        {% endif %}
+
+      text_color: >-
+        {% if color_template is defined and color_template %}{{ color_template }}
+        {% elif color_mode == 'none' %}
+        {% elif value_bad %}#606060
+        {% elif color_mode == 'palette' %}palette
+        {% elif color_mode == 'thresholds' and value_num is not none %}
+          {% set c = namespace(v=none) %}
+          {% for t in thresholds %}
+            {% if c.v is none and (t.below is not defined or value_num < (t.below | float)) %}{% set c.v = t.color %}{% endif %}
+          {% endfor %}{{ c.v or hex.value }}
+        {% else %}{{ hex.value }}{% endif %}
+
+      progress_value: >-
+        {% if progress_template is defined %}
+          {{ [0, [100, (progress_template | float(0)) | round(0) | int] | min] | max }}
+        {% elif progress_mode == 'value' and value_num is not none and (progress_max | float) != (progress_min | float) %}
+          {{ [0, [100, (((value_num - (progress_min | float)) / ((progress_max | float) - (progress_min | float))) * 100) | round(0) | int] | min] | max }}
+        {% else %}-1{% endif %}
+
+      chart_values: >-
+        {% set ce = chart_entity_input if (chart_entity_input is string and chart_entity_input) else entity_id %}
+        {% set src = chart_template if chart_template is defined else (state_attr(ce, chart_attribute) if chart_attribute else none) %}
+        {% set ns = namespace(vals=[]) %}
+        {% if src is iterable and src is not string and src is not mapping %}
+          {% for x in src %}
+            {% set n = (x.get(chart_value_key) if x is mapping else x) | float(none) %}
+            {% if n is not none %}{% set ns.vals = ns.vals + [(n * (chart_scale | float(1))) | round(0) | int] %}{% endif %}
+          {% endfor %}
+        {% endif %}
+        {{ ns.vals[-16:] }}
+
+      payload: >-
+        {% set prefix = (prefix_text if prefix_text is not none else '') | string %}
+        {% set main = prefix ~ value_text ~ unit_text %}
+        {% if text_color and text_color != 'palette' and unit_text %}
+          {% set d = {'text': [{'text': prefix ~ value_text, 'color': text_color}, {'text': unit_text, 'color': hex.unit}]} %}
+        {% else %}
+          {% set d = {'text': main} %}
+          {% if text_color %}{% set d = dict(d, textColor=text_color) %}{% endif %}
+        {% endif %}
+        {% if icon_template is not none and (icon_template | string | length) > 0 %}
+          {% set d = dict(d, icon=icon_template | string) %}
+        {% endif %}
+        {% if text_color == 'palette' %}{% set d = dict(d, palette=palette_name) %}{% endif %}
+        {% if (progress_value | int) >= 0 %}
+          {% set bar = text_color if (progress_use_value_color and text_color and text_color != 'palette') else hex.progress %}
+          {% set d = dict(d, progress=progress_value | int, progressColor=bar, progressTrackColor=hex.track) %}
+        {% endif %}
+        {% if chart_type != 'none' and (chart_values | length) >= 2 %}
+          {% set d = dict(d, **{('barChart' if chart_type == 'bar' else 'lineChart'): chart_values,
+                               'chartColor': hex.chart, 'chartAutoscale': true, 'textInFront': true}) %}
+        {% endif %}
+        {% if effect %}{% set d = dict(d, effect=effect, effectSpeed=effect_speed | float(1)) %}{% endif %}
+        {% if overlay %}{% set d = dict(d, overlay=overlay) %}{% endif %}
+        {% if scroll_mode %}{% set d = dict(d, scroll=scroll_mode) %}{% endif %}
+        {{ d }}
 
   - repeat:
-     for_each: "{{ device_ids }}"
-     sequence:
-       - variables:
+      for_each: "{{ device_ids }}"
+      sequence:
+        - variables:
             awtrix_device_name: "{{ iif( device_attr(repeat.item, 'name_by_user') != none, device_attr(repeat.item, 'name_by_user'), device_attr(repeat.item, 'name') ) }}"
-            awtrix_device_id: "{{repeat.item}}"
+            awtrix_device_id: "{{ repeat.item }}"
 
-       - if: !input additional_conditions
-         then:
-           - service: awtrix_ng.push_app_data
-             data:
-               device_id: "{{awtrix_device_id}}"
-               name: "{{app_name}}"
-               data: "{{ dict(payload, **user_options) }}"
+        - if: !input additional_conditions
+          then:
+            - action: awtrix_ng.push_app_data
+              data:
+                device_id: "{{ awtrix_device_id }}"
+                name: "{{ app_name }}"
+                data: "{{ dict(payload, **(user_options or {})) }}"
 
-         else:
-           - service: awtrix_ng.push_app_data
-             data:
-               device_id: "{{awtrix_device_id}}"
-               name: "{{app_name}}"
-               data: {}
+          else:
+            - action: awtrix_ng.push_app_data
+              data:
+                device_id: "{{ awtrix_device_id }}"
+                name: "{{ app_name }}"
+                data: {}
