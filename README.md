@@ -277,6 +277,17 @@ data:
   rtttl: "two_short:d=4,o=5,b=100:16e6,16e6"
 ```
 
+## Sensors
+
+Besides the dedicated sensors (temperature, humidity, battery, illuminance, Wifi signal, uptime, free RAM, last boot, ...), the integration creates an entity for **every other field** that the device reports at `/api/v1/device`:
+
+- numbers and text become sensors (e.g. battery voltage, FPS, message count, current app, reset reason, `wifi_*`, `mqtt_*`, `mirror_*` and `update_*` details),
+- `true`/`false` values become binary sensors (e.g. low battery, USB power, scripting running, Wifi/MQTT enabled).
+
+Nested objects are flattened (`mqtt.lastError` becomes **MQTT last error**). Known fields get a matching unit and device class; unknown numeric fields are recognised by their name suffix (`...Bytes`, `...Ms`, `...Seconds`, `...Voltage`, `...Percent`). Almost all of them are diagnostic entities, so they appear under *Diagnostic* on the device page.
+
+The list is re-checked on every poll: when a newer AWTRIX NG firmware adds a field, its entity shows up automatically, without a code change or a reload. Fields that already have their own entity (brightness and matrix power as the light, indicators, switches) are not duplicated, and lists such as `indicators` are skipped.
+
 ## Buttons
 
 The integration creates three binary sensors for the device's physical buttons: `..._button_left`, `..._button_select`, `..._button_right`. They turn `on` while the button is held and `off` on release.

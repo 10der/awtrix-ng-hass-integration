@@ -18,6 +18,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
 from .coordinator import AwtrixCoordinator
+from .dynamic import DeviceField, discover_fields, resolve_path, sensor_meta_for
 from .entity import AwtrixEntity
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -71,7 +72,62 @@ async def async_setup_entry(
         ]
     )
 
+    # Every other scalar field of /api/v1/device gets a sensor automatically.
+    # Re-checked on each poll so fields added by a newer firmware appear
+    # without reloading the integration.
+    known_keys: set[str] = set()
+
+    @callback
+    def _add_new_sensors() -> None:
+        new_entities: list[AwtrixDynamicSensor] = []
+        for field in discover_fields(coordinator.device_data):
+            if field.is_binary or field.key in known_keys:
+                continue
+            known_keys.add(field.key)
+            new_entities.append(
+                AwtrixDynamicSensor(hass=hass, coordinator=coordinator, field=field)
+            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _add_new_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_sensors))
+
 PARALLEL_UPDATES = 1
+
+
+class AwtrixDynamicSensor(AwtrixEntity, SensorEntity):
+    """Sensor created automatically for a field of the device payload."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: AwtrixCoordinator,
+        field: DeviceField,
+    ) -> None:
+        """Initialize the entity."""
+        meta = sensor_meta_for(field)
+        self.hass = hass
+        self._path = field.path
+        self._attr_name = field.name
+        self._attr_device_class = meta.device_class
+        self._attr_state_class = meta.state_class
+        self._attr_native_unit_of_measurement = meta.unit
+        self._attr_icon = meta.icon
+        self._attr_entity_category = meta.category
+        if meta.suggested_unit is not None:
+            self._attr_suggested_unit_of_measurement = meta.suggested_unit
+        if meta.precision is not None:
+            self._attr_suggested_display_precision = meta.precision
+
+        super().__init__(coordinator, f"data_{field.key}")
+
+    @property
+    def native_value(self) -> Any:
+        """Return the current value from the latest device payload."""
+        value = resolve_path(self.coordinator.device_data, self._path)
+        # An empty string (e.g. "no error") is shown as unknown, not as a blank state.
+        return value if value != "" else None
 
 class CommmonSensor(AwtrixEntity, SensorEntity):
     """Representation of a common Sensor."""

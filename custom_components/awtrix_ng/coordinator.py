@@ -65,6 +65,9 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             port=80,
         )
         self.on_button_click: dict[str, Callable[[str], None]] = {}
+        # Raw /api/v1/device payload, kept apart from the merged data so that
+        # settings keys can never shadow device fields (used for auto-discovery).
+        self.device_data: dict[str, Any] = {}
 
     async def async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint.
@@ -82,6 +85,8 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except AwtrixNgApiError as err:
             # This will show entities as unavailable by raising UpdateFailed exception
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        self.device_data = device
 
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return {**device, **settings}
