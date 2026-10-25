@@ -151,7 +151,8 @@ blueprint:
 
         unit_color:
           name: Unit color
-          default: [255, 255, 255]
+          description: Leave empty to use the value color
+          default:
           selector:
             color_rgb:
 
@@ -514,7 +515,7 @@ actions:
       value_font: "{{ '' if value_font_in in ['default', ''] else value_font_in }}"
       title_font: "{{ '' if title_font_in in ['default', ''] else title_font_in }}"
       title_hex: "{% set c = title_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
-      unit_hex: "{% set c = unit_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
+      unit_hex: "{% if unit_color_rgb %}{% set c = unit_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}{% endif %}"
       value_hex: "{% set c = value_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
       track_hex: "{% set c = track_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
 
@@ -559,7 +560,7 @@ actions:
             {% else %}
               {% set col = value_hex %}
             {% endif %}
-            {% set ns.out = ns.out + [{'txt': txt, 'unit': unit, 'prefix': prefix, 'color': col, 'num': num, 'name': state_attr(e, 'friendly_name') or e}] %}
+            {% set ns.out = ns.out + [{'txt': txt, 'unit': unit, 'prefix': prefix, 'color': col, 'ucol': unit_hex or (value_hex if col == 'palette' else col), 'num': num, 'name': state_attr(e, 'friendly_name') or e}] %}
           {% else %}
             {% set ns.out = ns.out + [none] %}
           {% endif %}
@@ -612,7 +613,7 @@ actions:
         {% set has_icon = (icon_id | string | length) > 0 %}
         {% set X = 9 if has_icon else 0 %}
         {% set W = 52 - X %}
-        {% set vtext = ([{'text': v.prefix}] if v.prefix else []) + [{'text': v.txt}] + ([{'text': v.unit, 'color': unit_hex}] if v.unit else []) %}
+        {% set vtext = ([{'text': v.prefix}] if v.prefix else []) + [{'text': v.txt}] + ([{'text': v.unit, 'color': v.ucol}] if v.unit else []) %}
         {% set vcol = {'color': 'palette', 'palette': palette_name} if v.color == 'palette' else {'color': v.color} %}
         {% set vstyle = dict(vcol, **({'font': value_font} if value_font else {})) %}
         {% set tstyle = {'color': title_hex, 'font': title_font} if title_font else {'color': title_hex} %}
@@ -642,7 +643,7 @@ actions:
             dict({'id': 'chart', 'box': [0, 9, 52, 7], 'chart': chart}, **vcol)] %}
 
         {% elif p == 'two_values' %}
-          {% set v2text = [{'text': v2.txt}] + ([{'text': v2.unit, 'color': unit_hex}] if v2.unit else []) %}
+          {% set v2text = [{'text': v2.txt}] + ([{'text': v2.unit, 'color': v2.ucol}] if v2.unit else []) %}
           {% set v2col = {'color': 'palette', 'palette': palette_name} if v2.color == 'palette' else {'color': v2.color} %}
           {% set v2style = dict(v2col, **({'font': value_font} if value_font else {})) %}
           {% if show_titles %}
@@ -679,7 +680,7 @@ actions:
         {% set v = info[0] %}
         {# a list of segments ignores textColor, so every segment carries its own colour #}
         {% set sc = {} if v.color == 'palette' else {'color': v.color} %}
-        {% set segs = ([dict({'text': v.prefix}, **sc)] if v.prefix else []) + [dict({'text': v.txt}, **sc)] + ([{'text': v.unit, 'color': unit_hex}] if v.unit else []) %}
+        {% set segs = ([dict({'text': v.prefix}, **sc)] if v.prefix else []) + [dict({'text': v.txt}, **sc)] + ([{'text': v.unit, 'color': v.ucol}] if v.unit else []) %}
         {% set spec = {'text': segs, 'textColor': v.color} %}
         {% if v.color == 'palette' %}{% set spec = dict(spec, palette=palette_name) %}{% endif %}
         {% if icon_id | string | length > 0 %}{% set spec = dict(spec, icon=icon_id) %}{% endif %}
