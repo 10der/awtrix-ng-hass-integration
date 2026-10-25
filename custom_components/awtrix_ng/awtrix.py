@@ -5,8 +5,9 @@ import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .awtrix_ng_api import AwtrixNgApi
+from .awtrix_ng_api import AwtrixNgApi, AwtrixNgApiError
 from .common import async_get_coordinator_by_device_id, getIcon
 from .const import CONF_DEVICE_ID
 from .coordinator import AwtrixCoordinator
@@ -115,3 +116,52 @@ class AwtrixService:
             lambda x: x.async_update_display(overlay=overlay_name, clear_overlay=clear),
             self.api(data),
         )
+
+    async def say(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Speak text with a Home Assistant TTS engine."""
+
+        # tts needs its own requirements, imported only when the service is used
+        from homeassistant.components.media_source import async_resolve_media  # noqa: PLC0415
+        from homeassistant.components.tts.media_source import (  # noqa: PLC0415
+            generate_media_source_id,
+        )
+
+        media_id = generate_media_source_id(
+            self.hass,
+            data["message"],
+            data.get("engine"),
+            data.get("language"),
+            data.get("options"),
+        )
+        play_media = await async_resolve_media(self.hass, media_id, None)
+        coordinators = self.api(data)
+        url = await self._device_url(play_media.url, coordinators)
+        return await self.call(lambda x: x.async_play_sound(file=url), coordinators)
+
+    async def _device_url(self, url: str, coordinators: list[AwtrixCoordinator]) -> str:
+        """Make a media URL reachable by the watch (internal URL, not external)."""
+
+        from homeassistant.components.media_player.browse_media import (  # noqa: PLC0415
+            async_process_play_media_url,
+        )
+
+        url = async_process_play_media_url(self.hass, url, allow_relative_url=True)
+        if not url.startswith("/"):
+            return url
+
+        try:
+            return get_url(self.hass, allow_external=False) + url
+        except NoURLAvailableError:
+            pass
+
+        if coordinators:
+            try:
+                voice = await coordinators[0].api.async_get_voice()
+            except AwtrixNgApiError as err:
+                _LOGGER.debug("Cannot read voice config: %s", err)
+            else:
+                if base := (voice.get("config") or {}).get("url"):
+                    return base.rstrip("/") + url
+
+        _LOGGER.warning("No internal Home Assistant URL, the watch will use the external one")
+        return get_url(self.hass) + url

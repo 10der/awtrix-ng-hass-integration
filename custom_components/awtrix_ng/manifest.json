@@ -4,6 +4,7 @@
   "codeowners": [
     "@10der"
   ],
+  "after_dependencies": ["tts", "media_source"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/10der/awtrix-ng-hass-integration/blob/main/README.md",

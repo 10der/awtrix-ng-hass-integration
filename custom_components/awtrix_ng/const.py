@@ -30,6 +30,7 @@ SERVICE_GET_DEVICE = "get_device"
 SERVICE_SWITCH_APP = "switch_app"
 SERVICE_SOUND = "sound"
 SERVICE_RTTTL = "rtttl"
+SERVICE_SAY = "say"
 SERVICE_OVERLAY = "overlay"
 
 SERVICES = [
@@ -39,6 +40,7 @@ SERVICES = [
     SERVICE_GET_DEVICE,
     SERVICE_SOUND,
     SERVICE_RTTTL,
+    SERVICE_SAY,
     SERVICE_SWITCH_APP,
     SERVICE_OVERLAY,
 ]
@@ -98,6 +100,15 @@ SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     },
 )
 
+SERVICE_SAY_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Required("message"): str,
+        vol.Optional("engine"): str,
+        vol.Optional("language"): str,
+        vol.Optional("options"): dict,
+    },
+)
+
 SERVICE_OVERLAY_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Optional(SERVICE_OVERLAY): str,
@@ -150,6 +161,53 @@ SERVICE_SOUND_FIELDS = {
         "example": "beep",
         "selector": {
             "text": ""
+        }
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix_ng",
+                "multiple" : True,
+            }
+        }
+    }
+}
+
+SERVICE_SAY_FIELDS = {
+    "message": {
+        "description": "Text to speak. The generated mp3 must be under 4 MB.",
+        "required": True,
+        "example": "Привіт",
+        "selector": {
+            "text": {}
+        }
+    },
+    "engine": {
+        "description": "TTS entity. Defaults to the Home Assistant default engine.",
+        "required": False,
+        "example": "tts.openai_tts",
+        "selector": {
+            "entity": {
+                "domain": "tts",
+            }
+        }
+    },
+    "language": {
+        "description": "Language passed to the TTS engine",
+        "required": False,
+        "example": "uk",
+        "selector": {
+            "text": {}
+        }
+    },
+    "options": {
+        "description": "Engine specific options passed as is",
+        "required": False,
+        "selector": {
+            "object": {}
         }
     },
     "device_id": {
@@ -277,6 +335,7 @@ SERVICE_TO_FIELDS = {
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_FIELDS,
     SERVICE_RTTTL: SERVICE_RTTTL_FIELDS,
     SERVICE_SOUND: SERVICE_SOUND_FIELDS,
+    SERVICE_SAY: SERVICE_SAY_FIELDS,
     SERVICE_OVERLAY: SERVICE_OVERLAY_FIELDS
 }
 
@@ -288,6 +347,7 @@ SERVICE_TO_SCHEMA = {
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_SCHEMA,
     SERVICE_RTTTL: SERVICE_RTTTL_SCHEMA,
     SERVICE_SOUND: SERVICE_SOUND_SCHEMA,
+    SERVICE_SAY: SERVICE_SAY_SCHEMA,
     SERVICE_OVERLAY: SERVICE_OVERLAY_SCHEMA
 }
 
@@ -299,5 +359,6 @@ SERVICE_TO_TARGET = {
     SERVICE_SWITCH_APP: SERVICE_DEVICE_TARGET,
     SERVICE_RTTTL: SERVICE_DEVICE_TARGET,
     SERVICE_SOUND: SERVICE_DEVICE_TARGET,
+    SERVICE_SAY: SERVICE_DEVICE_TARGET,
     SERVICE_OVERLAY: SERVICE_DEVICE_TARGET,
 }

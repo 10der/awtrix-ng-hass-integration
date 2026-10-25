@@ -7,3 +7,5 @@
 # manifest requirement, bump this pin to match.
 pytest-homeassistant-custom-component
 pytest-asyncio
+mutagen
+ha-ffmpeg
