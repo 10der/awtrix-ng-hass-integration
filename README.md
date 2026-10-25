@@ -277,6 +277,23 @@ data:
   rtttl: "two_short:d=4,o=5,b=100:16e6,16e6"
 ```
 
+### Text to speech
+
+Speaks text with any Home Assistant TTS engine (any language). The watch downloads the generated mp3 from Home Assistant, so no token is needed. The mp3 must be under 4 MB. If a clip does not play, check `alert.error` in `GET /api/v1/audio` on the watch.
+
+```yaml
+action: awtrix_ng.say
+data:
+  device_id:
+    - YOUR_DEVICE_ID
+  message: "Привіт"
+  engine: tts.openai_tts   # optional, defaults to the Home Assistant default engine
+  language: uk             # optional
+  options: {}              # optional, engine specific
+```
+
+The watch is given the internal Home Assistant URL. If none is configured, the Home Assistant address set on the watch is used.
+
 ## Buttons
 
 The integration creates three binary sensors for the device's physical buttons: `..._button_left`, `..._button_select`, `..._button_right`. They turn `on` while the button is held and `off` on release.
