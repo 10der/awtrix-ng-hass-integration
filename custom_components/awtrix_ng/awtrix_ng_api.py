@@ -235,6 +235,9 @@ class AwtrixNgApi:
     async def async_get_device(self) -> JsonObject:
         return cast("dict[str, Any]", await self._request("GET", "/api/v1/device"))
 
+    async def async_get_voice(self) -> JsonObject:
+        return cast("dict[str, Any]", await self._request("GET", "/api/v1/voice"))
+
     async def async_get_version(self) -> str:
         result = await self._request("GET", "/api/v1/version")
         if not isinstance(result, dict) or not isinstance(result.get("version"), str):
@@ -432,11 +435,16 @@ class AwtrixNgApi:
         name: str | None = None,
         rtttl: str | None = None,
         builtin: str | None = None,
+        file: str | None = None,
     ) -> None:
-        selected = sum(value is not None for value in (name, rtttl, builtin))
+        selected = sum(value is not None for value in (name, rtttl, builtin, file))
         if selected != 1:
-            raise ValueError("Exactly one of name, rtttl or builtin must be supplied")
-        payload = {key: value for key, value in {"name": name, "rtttl": rtttl, "builtin": builtin}.items() if value is not None}
+            raise ValueError("Exactly one of name, rtttl, builtin or file must be supplied")
+        payload = {
+            key: value
+            for key, value in {"name": name, "rtttl": rtttl, "builtin": builtin, "file": file}.items()
+            if value is not None
+        }
         await self._request("POST", "/api/v1/audio/play", json=payload, response_type="none")
 
     async def async_stop_sound(self) -> None:
