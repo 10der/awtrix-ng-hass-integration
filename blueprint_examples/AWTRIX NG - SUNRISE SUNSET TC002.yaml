@@ -1,0 +1,31 @@
+# Example for AWTRIX NG on Ulanzi TC002 (52x16) only.
+# Needs the blueprint awtrix-ng-tc002-mqtt.yaml; it is not for TC001 / AWTRIX 3 clocks.
+alias: AWTRIX NG - SUNRISE SUNSET TC002
+description: Sunrise / sunset icon and time (e.g. 17:50), shown only during the 15 minutes before the event
+use_blueprint:
+  path: 10der/awtrix-ng-tc002-mqtt.yaml
+  input:
+    app_name: awtrix_app_sun
+    awtrix_device:
+      - awtrix_bedroom
+      - awtrix_hall
+    entity: sun.sun
+    preset: icon_value
+    user_options:
+      durationMs: 8000
+    extra_triggers:
+      - trigger: time_pattern
+        minutes: /1
+    # outside the window the app is removed from the clock
+    additional_conditions:
+      - condition: template
+        value_template: "{{ 0 <= mins_left <= 15 }}"
+    additional_options:
+      rising: "{{ as_timestamp(state_attr('sun.sun', 'next_rising'), 9999999999) }}"
+      setting: "{{ as_timestamp(state_attr('sun.sun', 'next_setting'), 9999999999) }}"
+      is_rise: "{{ rising < setting }}"
+      event_ts: "{{ rising if is_rise else setting }}"
+      mins_left: "{{ (event_ts - as_timestamp(now())) / 60 }}"
+      icon_template: "{{ '485' if is_rise else '486' }}"
+      value_template: "{{ event_ts | timestamp_custom('%H:%M', true) }}"
+      color_template: "{{ '#FFC040' if is_rise else '#FF6A30' }}"

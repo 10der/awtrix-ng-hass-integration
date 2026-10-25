@@ -127,6 +127,8 @@ blueprint:
                   value: matrix-light6
                 - label: matrix-chunky8x6
                   value: matrix-chunky8x6
+                - label: large
+                  value: large
 
         title_font:
           name: Title font
@@ -169,6 +171,9 @@ blueprint:
       input:
         color_mode:
           name: Color mode
+          description: >-
+            "Temperature" colors the value by the built-in temp_colors table
+            (-15 ... 40 degrees, Fahrenheit sensors are converted).
           default: fixed
           selector:
             select:
@@ -177,6 +182,8 @@ blueprint:
                   value: fixed
                 - label: Thresholds
                   value: thresholds
+                - label: Temperature (built-in palette)
+                  value: temperature
                 - label: Palette
                   value: palette
 
@@ -434,6 +441,21 @@ triggers:
   - triggers: !input extra_triggers
 
 variables:
+  # Built-in temperature palette: the first step at or above the value wins.
+  # Override it with your own temp_colors in "Additional options".
+  temp_colors:
+    "-15": "#007fff"
+    "-10": "#00d4ff"
+    "-5": "#00ffd4"
+    "0": "#00ff7f"
+    "5": "#00ff2a"
+    "10": "#2aff00"
+    "15": "#7fff00"
+    "20": "#d4ff00"
+    "25": "#ffd400"
+    "30": "#ff7f00"
+    "35": "#ff5000"
+    "40": "#ff2000"
   entity_id: !input entity
   entity2_input: !input entity2
   chart_entity_input: !input chart_entity
@@ -529,6 +551,11 @@ actions:
                 {% endif %}
               {% endfor %}
               {% set col = c.v or value_hex %}
+            {% elif color_mode == 'temperature' and num is not none %}
+              {% set tc = (num - 32) * 5 / 9 if (state_attr(e, 'unit_of_measurement') == '°F' and not value_attribute and not custom) else num %}
+              {% set ks = temp_colors.keys() | map('int') | sort | list %}
+              {% set step = ((ks | select('>=', tc) | list) + [ks | last]) | first %}
+              {% set col = temp_colors.get(step | string) or temp_colors.get(step) %}
             {% elif color_mode == 'palette' %}
               {% set col = 'palette' %}
             {% else %}
@@ -584,7 +611,7 @@ actions:
       layout_spec: >-
         {% set v = info[0] %}
         {% set v2 = info[1] %}
-        {% set has_icon = (icon_id | length) > 0 %}
+        {% set has_icon = (icon_id | string | length) > 0 %}
         {% set X = 9 if has_icon else 0 %}
         {% set W = 52 - X %}
         {% set vtext = ([{'text': v.prefix}] if v.prefix else []) + [{'text': v.txt}] + ([{'text': v.unit, 'color': unit_hex}] if v.unit else []) %}
@@ -642,8 +669,26 @@ actions:
         {{ spec }}
 
   - variables:
+      # region icons must be JSON strings, but a numeric id like 17056 is parsed back to an int
       final_layout: >-
-        {{ dict({'version': 1}, **custom_spec) if preset == 'custom' else layout_spec }}
+        {% set l = dict({'version': 1}, **custom_spec) if preset == 'custom' else layout_spec %}
+        {% set ns = namespace(r=[]) %}
+        {% for r in l.regions %}{% set ns.r = ns.r + [dict(r, icon=r.icon | string) if 'icon' in r else r] %}{% endfor %}
+        {{ dict(l, regions=ns.r) }}
+      # "Icon + value" uses the plain app format: the clock draws it in the big
+      # enlarged size (enlargeApps), which layout regions cannot do.
+      legacy_spec: >-
+        {% set v = info[0] %}
+        {# a list of segments ignores textColor, so every segment carries its own colour #}
+        {% set sc = {} if v.color == 'palette' else {'color': v.color} %}
+        {% set segs = ([dict({'text': v.prefix}, **sc)] if v.prefix else []) + [dict({'text': v.txt}, **sc)] + ([{'text': v.unit, 'color': unit_hex}] if v.unit else []) %}
+        {% set spec = {'text': segs, 'textColor': v.color} %}
+        {% if v.color == 'palette' %}{% set spec = dict(spec, palette=palette_name) %}{% endif %}
+        {% if icon_id | string | length > 0 %}{% set spec = dict(spec, icon=icon_id) %}{% endif %}
+        {% if value_font %}{% set spec = dict(spec, font=value_font) %}{% endif %}
+        {% if effect %}{% set spec = dict(spec, effect=effect, effectSpeed=effect_speed | float(1)) %}{% endif %}
+        {% if overlay %}{% set spec = dict(spec, overlay=overlay) %}{% endif %}
+        {{ spec }}
 
   # ---------- send ----------
   - repeat:
@@ -655,7 +700,7 @@ actions:
               data:
                 device_id: "{{ repeat.item }}"
                 name: "{{ app_name }}"
-                data: "{{ dict({'layout': final_layout}, **safe_options) }}"
+                data: "{{ dict(legacy_spec if preset == 'icon_value' else {'layout': final_layout}, **safe_options) }}"
           else:
             - action: awtrix_ng.push_app_data
               data:

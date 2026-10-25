@@ -1,0 +1,715 @@
+blueprint:
+  name: AWTRIX NG TC002 show entity (MQTT)
+  description: >-
+    Show an entity on Ulanzi TC002 (52x16) over MQTT using AWTRIX NG layouts:
+    ready-made presets, color thresholds, progress bar, chart from an attribute,
+    two entities side by side, or your own layout.
+  domain: automation
+  source_url: https://github.com/10der/awtrix-ng-hass-integration/blob/main/awtrix-ng-tc002-mqtt.yaml
+  homeassistant:
+    min_version: 2024.10.0
+  input:
+    main_section:
+      name: Main
+      icon: mdi:clock-digital
+      input:
+        app_name:
+          name: (Required) Application name
+          description: "Application name"
+          default: "awtrix_app"
+          selector:
+            text:
+
+        awtrix_device:
+          name: AWTRIX NG TC002 MQTT prefix
+          description: MQTT device prefix without a trailing slash
+          default: []
+          selector:
+            text:
+              multiple: true
+
+        entity:
+          name: Entity
+          selector:
+            entity:
+
+        value_attribute:
+          name: Attribute (optional)
+          description: Show this attribute instead of the state.
+          default: ""
+          selector:
+            text:
+
+        preset:
+          name: Layout
+          default: icon_value
+          selector:
+            select:
+              mode: dropdown
+              options:
+                - label: "Icon + value"
+                  value: icon_value
+                - label: "Title above value"
+                  value: title_value
+                - label: "Value + progress bar"
+                  value: value_progress
+                - label: "Value + chart (from attribute)"
+                  value: value_chart
+                - label: "Two entities side by side"
+                  value: two_values
+                - label: "Custom layout (JSON)"
+                  value: custom
+
+    text_section:
+      name: Text & icon
+      icon: mdi:format-text
+      collapsed: true
+      input:
+        app_icon:
+          name: Icon
+          description: Icon ID (empty = no icon, the value uses the full width).
+          default: ""
+          selector:
+            text:
+
+        title:
+          name: Title
+          description: Used by "Title above value" and "Two entities". Empty = entity friendly name.
+          default: ""
+          selector:
+            text:
+
+        prefix_text:
+          name: Text prefix
+          default: ""
+          selector:
+            text:
+
+        suffix_text:
+          name: Text suffix
+          description: Empty = unit of measurement of the entity (if "Auto unit" is on).
+          default: ""
+          selector:
+            text:
+
+        auto_unit:
+          name: Auto unit
+          default: true
+          selector:
+            boolean:
+
+        decimals:
+          name: Decimals
+          description: "-1 = show the value as is"
+          default: -1
+          selector:
+            number:
+              min: -1
+              max: 4
+              step: 1
+              mode: box
+
+        value_font:
+          name: Value font
+          default: default
+          selector:
+            select:
+              custom_value: true
+              options:
+                - label: Clock default
+                  value: default
+                - label: small
+                  value: small
+                - label: matrix-light6
+                  value: matrix-light6
+                - label: matrix-chunky8x6
+                  value: matrix-chunky8x6
+                - label: large
+                  value: large
+
+        title_font:
+          name: Title font
+          default: matrix-light6
+          selector:
+            select:
+              custom_value: true
+              options:
+                - label: Clock default
+                  value: default
+                - label: small
+                  value: small
+                - label: matrix-light6
+                  value: matrix-light6
+                - label: matrix-chunky8x6
+                  value: matrix-chunky8x6
+
+        title_color:
+          name: Title color
+          default: [170, 170, 170]
+          selector:
+            color_rgb:
+
+        unit_color:
+          name: Unit color
+          default: [255, 255, 255]
+          selector:
+            color_rgb:
+
+        unavailable_text:
+          name: Text when unavailable
+          default: "--"
+          selector:
+            text:
+
+    color_section:
+      name: Value color
+      icon: mdi:palette
+      collapsed: true
+      input:
+        color_mode:
+          name: Color mode
+          description: >-
+            "Temperature" colors the value by the built-in temp_colors table
+            (-15 ... 40 degrees, Fahrenheit sensors are converted).
+          default: fixed
+          selector:
+            select:
+              options:
+                - label: Fixed color
+                  value: fixed
+                - label: Thresholds
+                  value: thresholds
+                - label: Temperature (built-in palette)
+                  value: temperature
+                - label: Palette
+                  value: palette
+
+        value_color:
+          name: Fixed color
+          default: [255, 255, 255]
+          selector:
+            color_rgb:
+
+        thresholds:
+          name: Thresholds
+          description: >-
+            First rule whose `below` is greater than the value wins.
+            A rule without `below` is the fallback.
+          default:
+            - below: 0
+              color: "#00AAFF"
+            - below: 25
+              color: "#00FF00"
+            - color: "#FF4400"
+          selector:
+            object:
+
+        palette_name:
+          name: Palette
+          description: Palette name, e.g. Rainbow (used in "Palette" mode).
+          default: Rainbow
+          selector:
+            text:
+
+    progress_section:
+      name: Progress bar
+      icon: mdi:progress-helper
+      collapsed: true
+      input:
+        progress_min:
+          name: Value at 0 %
+          default: 0
+          selector:
+            number:
+              min: -1000000
+              max: 1000000
+              step: any
+              mode: box
+        progress_max:
+          name: Value at 100 %
+          default: 100
+          selector:
+            number:
+              min: -1000000
+              max: 1000000
+              step: any
+              mode: box
+        track_color:
+          name: Track color
+          default: [32, 32, 32]
+          selector:
+            color_rgb:
+
+    chart_section:
+      name: Chart
+      icon: mdi:chart-line
+      collapsed: true
+      input:
+        chart_entity:
+          name: Chart entity
+          description: Entity holding the list of values (empty = main entity).
+          default: []
+          selector:
+            entity:
+        chart_attribute:
+          name: Attribute with values
+          description: "A list of numbers, or a list of objects (e.g. Nord Pool `raw_today`)."
+          default: ""
+          selector:
+            text:
+        chart_value_key:
+          name: Key inside objects
+          default: value
+          selector:
+            text:
+        chart_scale:
+          name: Scale
+          description: "Chart takes whole numbers only: 21.5 with scale 10 becomes 215."
+          default: 1
+          selector:
+            number:
+              min: 0.001
+              max: 100000
+              step: any
+              mode: box
+        chart_points:
+          name: Last N points
+          default: 52
+          selector:
+            number:
+              min: 2
+              max: 128
+              mode: box
+        chart_type:
+          name: Chart type
+          default: bar
+          selector:
+            select:
+              options: [bar, line]
+        chart_fixed:
+          name: Fixed scale
+          default: false
+          selector:
+            boolean:
+        chart_min:
+          name: Scale min (before scaling)
+          default: 0
+          selector:
+            number:
+              min: -1000000
+              max: 1000000
+              step: any
+              mode: box
+        chart_max:
+          name: Scale max (before scaling)
+          default: 100
+          selector:
+            number:
+              min: -1000000
+              max: 1000000
+              step: any
+              mode: box
+
+    second_section:
+      name: Second entity
+      icon: mdi:view-split-vertical
+      collapsed: true
+      input:
+        entity2:
+          name: Second entity
+          default: []
+          selector:
+            entity:
+        title2:
+          name: Second title
+          description: Empty = friendly name.
+          default: ""
+          selector:
+            text:
+        show_titles:
+          name: Show titles
+          default: true
+          selector:
+            boolean:
+
+    background_section:
+      name: Background
+      icon: mdi:weather-snowy
+      collapsed: true
+      input:
+        effect:
+          name: Background effect
+          description: Effect name from GET /api/v1/capabilities (empty = black).
+          default: ""
+          selector:
+            text:
+        effect_speed:
+          name: Effect speed
+          default: 1
+          selector:
+            number:
+              min: 0.1
+              max: 10
+              step: 0.1
+        overlay:
+          name: Overlay
+          description: Overlay name, e.g. snow (empty = the clock's own overlay).
+          default: ""
+          selector:
+            text:
+
+    custom_section:
+      name: Custom layout
+      icon: mdi:code-json
+      collapsed: true
+      input:
+        custom_layout:
+          name: Layout
+          description: >-
+            Used with the "Custom layout" preset. Templates can use
+            value_text, value_color, progress_pct, chart_values, title_text.
+          default:
+            regions:
+              - id: title
+                box: [0, 0, 52, 8]
+                text: "{{ title_text }}"
+                font: matrix-light6
+              - id: value
+                box: [0, 8, 52, 8]
+                text: "{{ value_text }}"
+                color: "{{ value_color }}"
+          selector:
+            object:
+
+    advanced_section:
+      name: Advanced
+      icon: mdi:cog
+      collapsed: true
+      input:
+        additional_options:
+          name: Additional options (your own variables)
+          description: >-
+            Variables computed before the layout is built. Use them in other templates,
+            or set one of these names to override the defaults:
+            value_template (text), icon_template, header_template (title),
+            color_template (#RRGGBB), progress_template (0-100), chart_template (list of numbers).
+          default: {}
+          selector:
+            object:
+        user_options:
+          name: App options
+          description: "Only durationMs, repeat, lifetimeMs, lifetimeExpiry are allowed next to a layout."
+          default:
+            durationMs: 8000
+          selector:
+            object:
+        extra_triggers:
+          name: Extra triggers
+          default: []
+          selector:
+            trigger:
+        pre_actions:
+          name: Actions before showing
+          default: []
+          selector:
+            action:
+        additional_conditions:
+          name: Conditions
+          description: When they fail, the app is removed from the clock.
+          default: []
+          selector:
+            condition:
+
+mode: queued
+max: 10
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: !input entity
+  - trigger: state
+    entity_id: !input entity2
+  - trigger: state
+    entity_id: !input chart_entity
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - triggers: !input extra_triggers
+
+variables:
+  # Built-in temperature palette: the first step at or above the value wins.
+  # Override it with your own temp_colors in "Additional options".
+  temp_colors:
+    "-15": "#007fff"
+    "-10": "#00d4ff"
+    "-5": "#00ffd4"
+    "0": "#00ff7f"
+    "5": "#00ff2a"
+    "10": "#2aff00"
+    "15": "#7fff00"
+    "20": "#d4ff00"
+    "25": "#ffd400"
+    "30": "#ff7f00"
+    "35": "#ff5000"
+    "40": "#ff2000"
+  entity_id: !input entity
+  entity2_input: !input entity2
+  chart_entity_input: !input chart_entity
+
+actions:
+  - choose: []
+    default: !input pre_actions
+
+  # ---------- inputs -> variables ----------
+  - variables:
+      awtrix_devices: !input awtrix_device
+      app_name: !input app_name
+      app_icon: !input app_icon
+      preset: !input preset
+      value_attribute: !input value_attribute
+      title_input: !input title
+      title2_input: !input title2
+      suffix_text: !input suffix_text
+      auto_unit: !input auto_unit
+      decimals: !input decimals
+      value_font_in: !input value_font
+      title_font_in: !input title_font
+      title_color_rgb: !input title_color
+      unit_color_rgb: !input unit_color
+      unavailable_text: !input unavailable_text
+      color_mode: !input color_mode
+      value_color_rgb: !input value_color
+      thresholds: !input thresholds
+      palette_name: !input palette_name
+      progress_min: !input progress_min
+      progress_max: !input progress_max
+      track_color_rgb: !input track_color
+      chart_attribute: !input chart_attribute
+      chart_value_key: !input chart_value_key
+      chart_scale: !input chart_scale
+      chart_points: !input chart_points
+      chart_type: !input chart_type
+      chart_fixed: !input chart_fixed
+      chart_min: !input chart_min
+      chart_max: !input chart_max
+      show_titles: !input show_titles
+      effect: !input effect
+      effect_speed: !input effect_speed
+      overlay: !input overlay
+
+  # ---------- advanced user's own variables ----------
+  - alias: Additional options
+    variables: !input additional_options
+
+  # ---------- derived values ----------
+  - variables:
+      user_options: !input user_options
+      # templated here (not above) so it can use variables from additional_options
+      prefix_text: !input prefix_text
+      icon_id: "{{ icon_template if icon_template is defined else app_icon }}"
+      entity2_id: "{{ entity2_input if entity2_input is string else '' }}"
+      chart_entity_id: >-
+        {{ chart_entity_input if (chart_entity_input is string and chart_entity_input) else entity_id }}
+      value_font: "{{ '' if value_font_in in ['default', ''] else value_font_in }}"
+      title_font: "{{ '' if title_font_in in ['default', ''] else title_font_in }}"
+      title_hex: "{% set c = title_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
+      unit_hex: "{% set c = unit_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
+      value_hex: "{% set c = value_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
+      track_hex: "{% set c = track_color_rgb | map('int') | list %}{{ '#%02X%02X%02X' | format(c[0], c[1], c[2]) }}"
+
+      # One record per entity: text, unit, prefix, color, number
+      info: >-
+        {% set ns = namespace(out=[]) %}
+        {% for e in [entity_id, entity2_id] %}
+          {% if e %}
+            {% set custom = loop.first and value_template is defined %}
+            {% set raw = value_template if custom else (state_attr(e, value_attribute) if value_attribute else states(e)) %}
+            {% set bad = raw is none or (raw | string) in ['unknown', 'unavailable', 'none', ''] %}
+            {% set num = none if bad else (raw | float(none)) %}
+            {% if bad %}
+              {% set txt = unavailable_text %}
+            {% elif num is not none and (decimals | int) >= 0 %}
+              {% set txt = ('%.' ~ (decimals | int) ~ 'f') | format(num) %}
+            {% else %}
+              {% set txt = raw | string %}
+            {% endif %}
+            {% set auto = (state_attr(e, 'unit_of_measurement') or '') if (auto_unit and not value_attribute and not custom and not bad) else '' %}
+            {% set unit = (suffix_text or auto) if loop.first else auto %}
+            {% set prefix = prefix_text if loop.first else '' %}
+            {% if bad %}
+              {% set col = '#606060' %}
+            {% elif loop.first and color_template is defined and color_template %}
+              {% set col = color_template %}
+            {% elif color_mode == 'thresholds' and num is not none %}
+              {% set c = namespace(v=none) %}
+              {% for t in thresholds %}
+                {% if c.v is none and (t.below is not defined or num < (t.below | float)) %}
+                  {% set c.v = t.color %}
+                {% endif %}
+              {% endfor %}
+              {% set col = c.v or value_hex %}
+            {% elif color_mode == 'temperature' and num is not none %}
+              {% set tc = (num - 32) * 5 / 9 if (state_attr(e, 'unit_of_measurement') == '°F' and not value_attribute and not custom) else num %}
+              {% set ks = temp_colors.keys() | map('int') | sort | list %}
+              {% set step = ((ks | select('>=', tc) | list) + [ks | last]) | first %}
+              {% set col = temp_colors.get(step | string) or temp_colors.get(step) %}
+            {% elif color_mode == 'palette' %}
+              {% set col = 'palette' %}
+            {% else %}
+              {% set col = value_hex %}
+            {% endif %}
+            {% set ns.out = ns.out + [{'txt': txt, 'unit': unit, 'prefix': prefix, 'color': col, 'num': num, 'name': state_attr(e, 'friendly_name') or e}] %}
+          {% else %}
+            {% set ns.out = ns.out + [none] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.out }}
+
+      progress_pct: >-
+        {% if progress_template is defined %}
+        {{ [0, [100, (progress_template | float(0)) | round(0) | int] | min] | max }}
+        {% else %}
+        {% set n = info[0].num %}
+        {% set lo = progress_min | float(0) %}
+        {% set hi = progress_max | float(100) %}
+        {% if n is none or hi == lo %}0{% else %}
+        {{ [0, [100, (((n - lo) / (hi - lo)) * 100) | round(0) | int] | min] | max }}{% endif %}
+        {% endif %}
+
+      chart_values: >-
+        {% set src = chart_template if chart_template is defined else (state_attr(chart_entity_id, chart_attribute) if chart_attribute else none) %}
+        {% set ns = namespace(vals=[]) %}
+        {% if src is iterable and src is not string and src is not mapping %}
+          {% for x in src %}
+            {% set n = (x.get(chart_value_key) if x is mapping else x) | float(none) %}
+            {% if n is not none %}
+              {% set ns.vals = ns.vals + [(n * (chart_scale | float(1))) | round(0) | int] %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+        {{ ns.vals[-(chart_points | int):] }}
+
+      title_text: "{{ header_template if header_template is defined else (title_input or info[0].name) }}"
+      value_text: "{{ info[0].prefix ~ info[0].txt ~ info[0].unit }}"
+      value_color: "{{ info[0].color }}"
+
+      # Only these keys may sit next to `layout`
+      safe_options: >-
+        {% set allowed = ['durationMs', 'repeat', 'lifetimeMs', 'lifetimeExpiry'] %}
+        {% set ns = namespace(d={}) %}
+        {% for k, v in (user_options or {}).items() if k in allowed %}
+          {% set ns.d = dict(ns.d, **{k: v}) %}
+        {% endfor %}
+        {{ ns.d }}
+
+  # ---------- build the layout ----------
+  - variables:
+      custom_spec: !input custom_layout
+      layout_spec: >-
+        {% set v = info[0] %}
+        {% set v2 = info[1] %}
+        {% set has_icon = (icon_id | string | length) > 0 %}
+        {% set X = 9 if has_icon else 0 %}
+        {% set W = 52 - X %}
+        {% set vtext = ([{'text': v.prefix}] if v.prefix else []) + [{'text': v.txt}] + ([{'text': v.unit, 'color': unit_hex}] if v.unit else []) %}
+        {% set vcol = {'color': 'palette', 'palette': palette_name} if v.color == 'palette' else {'color': v.color} %}
+        {% set vstyle = dict(vcol, **({'font': value_font} if value_font else {})) %}
+        {% set tstyle = {'color': title_hex, 'font': title_font} if title_font else {'color': title_hex} %}
+        {% set icon_r = [{'id': 'icon', 'box': [0, 4, 8, 8], 'icon': icon_id}] if has_icon else [] %}
+        {% set p = preset %}
+        {% if p == 'value_chart' and (chart_values | length) == 0 %}{% set p = 'icon_value' %}{% endif %}
+        {% if p == 'two_values' and v2 is none %}{% set p = 'icon_value' %}{% endif %}
+
+        {% if p == 'title_value' %}
+          {% set regions = icon_r + [
+            dict({'id': 'title', 'box': [X, 0, W, 8], 'text': title_text}, **tstyle),
+            dict({'id': 'value', 'box': [X, 8, W, 8], 'text': vtext}, **vstyle)] %}
+
+        {% elif p == 'value_progress' %}
+          {% set regions = ([{'id': 'icon', 'box': [0, 0, 8, 10], 'icon': icon_id}] if has_icon else []) + [
+            dict({'id': 'value', 'box': [X, 0, W, 11], 'text': vtext}, **vstyle),
+            dict({'id': 'bar', 'box': [0, 12, 52, 4], 'progress': progress_pct | int, 'trackColor': track_hex}, **vcol)] %}
+
+        {% elif p == 'value_chart' %}
+          {% set chart = {'values': chart_values, 'type': chart_type} %}
+          {% if chart_fixed %}
+            {% set s = chart_scale | float(1) %}
+            {% set chart = dict(chart, min=((chart_min | float(0)) * s) | round(0) | int, max=((chart_max | float(100)) * s) | round(0) | int) %}
+          {% endif %}
+          {% set regions = ([{'id': 'icon', 'box': [0, 0, 8, 8], 'icon': icon_id}] if has_icon else []) + [
+            dict({'id': 'value', 'box': [X, 0, W, 8], 'text': vtext}, **vstyle),
+            dict({'id': 'chart', 'box': [0, 9, 52, 7], 'chart': chart}, **vcol)] %}
+
+        {% elif p == 'two_values' %}
+          {% set v2text = [{'text': v2.txt}] + ([{'text': v2.unit, 'color': unit_hex}] if v2.unit else []) %}
+          {% set v2col = {'color': 'palette', 'palette': palette_name} if v2.color == 'palette' else {'color': v2.color} %}
+          {% set v2style = dict(v2col, **({'font': value_font} if value_font else {})) %}
+          {% if show_titles %}
+            {% set regions = [
+              dict({'id': 'title', 'box': [0, 0, 25, 8], 'text': title_text}, **tstyle),
+              dict({'id': 'value', 'box': [0, 8, 25, 8], 'text': vtext}, **vstyle),
+              dict({'id': 'title2', 'box': [27, 0, 25, 8], 'text': title2_input or v2.name}, **tstyle),
+              dict({'id': 'value2', 'box': [27, 8, 25, 8], 'text': v2text}, **v2style)] %}
+          {% else %}
+            {% set regions = [
+              dict({'id': 'value', 'box': [0, 0, 25, 16], 'text': vtext}, **vstyle),
+              dict({'id': 'value2', 'box': [27, 0, 25, 16], 'text': v2text}, **v2style)] %}
+          {% endif %}
+
+        {% else %}
+          {% set regions = icon_r + [dict({'id': 'value', 'box': [X, 0, W, 16], 'text': vtext}, **vstyle)] %}
+        {% endif %}
+
+        {% set spec = {'version': 1, 'regions': regions} %}
+        {% if effect %}{% set spec = dict(spec, effect=effect, effectSpeed=effect_speed | float(1)) %}{% endif %}
+        {% if overlay %}{% set spec = dict(spec, overlay=overlay) %}{% endif %}
+        {{ spec }}
+
+  - variables:
+      # region icons must be JSON strings, but a numeric id like 17056 is parsed back to an int
+      final_layout: >-
+        {% set l = dict({'version': 1}, **custom_spec) if preset == 'custom' else layout_spec %}
+        {% set ns = namespace(r=[]) %}
+        {% for r in l.regions %}{% set ns.r = ns.r + [dict(r, icon=r.icon | string) if 'icon' in r else r] %}{% endfor %}
+        {{ dict(l, regions=ns.r) }}
+      # "Icon + value" uses the plain app format: the clock draws it in the big
+      # enlarged size (enlargeApps), which layout regions cannot do.
+      legacy_spec: >-
+        {% set v = info[0] %}
+        {# a list of segments ignores textColor, so every segment carries its own colour #}
+        {% set sc = {} if v.color == 'palette' else {'color': v.color} %}
+        {% set segs = ([dict({'text': v.prefix}, **sc)] if v.prefix else []) + [dict({'text': v.txt}, **sc)] + ([{'text': v.unit, 'color': unit_hex}] if v.unit else []) %}
+        {% set spec = {'text': segs, 'textColor': v.color} %}
+        {% if v.color == 'palette' %}{% set spec = dict(spec, palette=palette_name) %}{% endif %}
+        {% if icon_id | string | length > 0 %}{% set spec = dict(spec, icon=icon_id) %}{% endif %}
+        {% if value_font %}{% set spec = dict(spec, font=value_font) %}{% endif %}
+        {% if effect %}{% set spec = dict(spec, effect=effect, effectSpeed=effect_speed | float(1)) %}{% endif %}
+        {% if overlay %}{% set spec = dict(spec, overlay=overlay) %}{% endif %}
+        {{ spec }}
+      final_payload: >-
+        {% set d = dict(legacy_spec if preset == 'icon_value' else {'layout': final_layout}, **safe_options) %}
+        {{ dict(d, icon=d.icon | string) if 'icon' in d else d }}
+
+  # ---------- send ----------
+  - repeat:
+      for_each: "{{ awtrix_devices }}"
+      sequence:
+        - variables:
+            mqtt_prefix: "{{ repeat.item | trim('/') }}"
+            mqtt_topic: "{{ mqtt_prefix }}/cmd/apps/pushed/{{ app_name }}"
+        - if: !input additional_conditions
+          then:
+            - action: mqtt.publish
+              data:
+                qos: 0
+                retain: false
+                topic: "{{ mqtt_topic }}"
+                payload: "{{ final_payload | to_json }}"
+          else:
+            - action: mqtt.publish
+              data:
+                qos: 0
+                retain: false
+                topic: "{{ mqtt_topic }}"
+                payload: ""

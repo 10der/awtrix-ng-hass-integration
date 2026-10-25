@@ -1,0 +1,53 @@
+# Example for AWTRIX NG on Ulanzi TC002 (52x16) only.
+# Needs the blueprint awtrix-ng-tc002-mqtt.yaml; it is not for TC001 / AWTRIX 3 clocks.
+alias: AWTRIX NG TC002 - PLAYER
+description: Now playing - artist (with channel) above the track title, thin progress bar below
+use_blueprint:
+  path: 10der/awtrix-ng-tc002-mqtt.yaml
+  input:
+    awtrix_device:
+      - awtrix_bedroom_tc002
+    app_name: awtrix_app_player
+    entity: media_player.sonos_roam
+    preset: custom
+    user_options:
+      durationMs: 15000
+      repeat: 1
+    # only while playing; otherwise the app is removed from the clock
+    additional_conditions:
+      - condition: template
+        value_template: "{{ playing_state == 'playing' }}"
+    extra_triggers:
+      - trigger: time_pattern
+        minutes: /1
+    custom_layout:
+      regions: "{{ player_regions }}"
+    additional_options:
+      playing_state: "{{ states(entity_id) }}"
+      title_text: "{{ state_attr(entity_id, 'media_title') or '' }}"
+      artist_text: "{{ state_attr(entity_id, 'media_artist') or '' }}"
+      channel_text: "{{ state_attr(entity_id, 'media_channel') or '' }}"
+      top_line: "{{ ((channel_text ~ ':') if channel_text else '') ~ artist_text }}"
+      duration: "{{ state_attr(entity_id, 'media_duration') | float(0) }}"
+      # -1 = no duration (radio): no progress bar
+      playing_percent: >-
+        {% if duration <= 0 %}-1{% else %}
+        {% set pos = state_attr(entity_id, 'media_position') | float(0) %}
+        {% set upd = as_timestamp(state_attr(entity_id, 'media_position_updated_at'), as_timestamp(now())) %}
+        {{ [0, [100, ((pos + as_timestamp(now()) - upd) * 100 / duration) | round(0) | int] | min] | max }}
+        {% endif %}
+      player_regions: >-
+        {% set top = top_line | string %}
+        {% set ttl = (title_text | string) or '-' %}
+        {% set ns = namespace(r=[{'id': 'icon', 'box': [0, 4, 8, 8], 'icon': 'sound'}]) %}
+        {% if top %}
+          {% set ns.r = ns.r + [
+            {'id': 'top', 'box': [9, 0, 43, 7], 'text': top, 'font': 'matrix-light6', 'color': '#FFA040'},
+            {'id': 'title', 'box': [9, 7, 43, 7], 'text': ttl, 'font': 'matrix-light6', 'color': '#C0C0C0'}] %}
+        {% else %}
+          {% set ns.r = ns.r + [{'id': 'title', 'box': [9, 0, 43, 14], 'text': ttl, 'font': 'matrix-light6', 'color': '#C0C0C0'}] %}
+        {% endif %}
+        {% if playing_percent >= 0 %}
+          {% set ns.r = ns.r + [{'id': 'bar', 'box': [9, 15, 43, 1], 'progress': playing_percent, 'color': '#18B04C', 'trackColor': '#333333'}] %}
+        {% endif %}
+        {{ ns.r }}
