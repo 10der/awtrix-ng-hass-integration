@@ -95,6 +95,11 @@ def _normalize_icon(payload: Mapping[str, Any]) -> dict[str, Any]:
     if body.get("icon") is not None:
         body["icon"] = str(body["icon"])
 
+    # HA native-type parsing turns a rendered "1230" into int; firmware needs a string.
+    text = body.get("text")
+    if isinstance(text, (int, float)) and not isinstance(text, bool):
+        body["text"] = str(text)
+
     return body
 
 class AwtrixNgApi:
