@@ -82,7 +82,8 @@ class AwtrixLight(AwtrixEntity, LightEntity):
         self.hass = hass
         self.key = key
         self._attr_name = name or key
-        self._brightness = 0
+        # Full brightness by default: rgb_color without brightness must not be scaled to ~0
+        self._brightness = 255
         self._state = False
         self._attr_icon = icon
 
