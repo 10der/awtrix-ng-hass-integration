@@ -1,5 +1,9 @@
 # Home Assistant AWTRIX NG Integration
 
+> [!WARNING]
+> **This project is abandoned and no longer maintained.**
+> A new integration, **[Awtrix Studio](https://github.com/3615nulsi/ha-awtrix-studio)**, fully covers everything this project does (and more) and is actively developed. Please migrate to it. This repository receives no further features or fixes (last release: v0.2.14).
+
 ![release](https://img.shields.io/github/v/release/10der/awtrix-ng-hass-integration)
 ![issues](https://img.shields.io/github/issues/10der/awtrix-ng-hass-integration)
 ![code size](https://img.shields.io/github/languages/code-size/10der/awtrix-ng-hass-integration)
